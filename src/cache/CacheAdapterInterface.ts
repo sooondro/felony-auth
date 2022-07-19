@@ -1,5 +1,6 @@
+import UserInterface from '../models/UserInterface';
 export default interface CacheAdapterInterface {
-	createSession(payload: object);
-	getSessions(payload: object);
-	logout(payload: object);
+	createSession(payload: UserInterface): Promise<string>;
+	getSession(key: string);
+	logout(key: string);
 }

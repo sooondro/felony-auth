@@ -1,4 +1,5 @@
 import RegistrationData from "../types/RegistrationData";
+import TwoFactorRegistrationData from "../types/TwoFactorRegistrationData";
 
 export default interface StorageAdapterInterface {
   register(payload: RegistrationData);
@@ -6,4 +7,6 @@ export default interface StorageAdapterInterface {
   getUserByEmail(email: string);
   getUserById(id: string);
   getUserByUsername(username: string);
+  getTwoFactorUserByEmail(email: string);
+  registerTwoFactorUser(twoFactoUser: TwoFactorRegistrationData);
 }

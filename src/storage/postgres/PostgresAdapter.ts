@@ -4,8 +4,10 @@ import Bcrypt from 'bcrypt';
 import RegistrationData from "../../types/RegistrationData";
 import LoginData from '../../types/LoginData';
 import PostgresConnectionData from "../../types/PostgresConnectionData";
+import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 
 import User from "./models/User";
+import TwoFactorUser from "./models/TwoFactorUser";
 
 import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import StorageAdapterInterface from "../StorageAdapterInterface";
@@ -14,6 +16,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client: Sequelize;
   private userRepository: Repository<User>;
+  private twoFactorUserRepository: Repository<TwoFactorUser>;
   private errorAdapter: ErrorAdapterInterface;
 
   constructor(
@@ -37,7 +40,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         dialect: 'postgres',
         username: config.username,
         password: config.password,
-        models: [User],
+        models: [User, TwoFactorUser],
         repositoryMode: true,
       },
     );
@@ -49,7 +52,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     this.client = new Sequelize(
       connectionUri,
       {
-        models: [User],
+        models: [User, TwoFactorUser],
         repositoryMode: true,
       }
     );
@@ -61,6 +64,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     try {
       await this.client.authenticate();
       this.userRepository = this.client.getRepository(User);
+      this.twoFactorUserRepository = this.client.getRepository(TwoFactorUser);
+
     } catch (error) {
       this.errorAdapter.throwStorageConnectionError(error);
     }
@@ -78,7 +83,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
           firstName: payload.firstName,
           lastName: payload.lastName,
           email: payload.email,
-          password: hashedPassword
+          password: hashedPassword,
         }
       });
 
@@ -105,7 +110,33 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     }
   }
 
+  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData) {
+    try {
+      console.log("MDA USLO JE U 2FA REGISTRATION");
+      
+      const [user, created] = await this.twoFactorUserRepository.findOrCreate({
+        where: { email: twoFactorUser.email },
+        defaults: {
+          email: twoFactorUser.email,
+          provider: twoFactorUser.provider,
+          secret: twoFactorUser.secret,
+        }
+      });
+      console.log("KREIRALO JE 2FA USER", user);
+
+      if(!created) {
+        this.errorAdapter.throwTwoFactorRegistrationError(new Error("Two factor user already exists"));
+      }
+      
+      return user;
+    } catch (error) {
+      this.errorAdapter
+    }
+  }
+
   async getUserByEmail(email: string): Promise<User> {
+    console.log(email);
+
     const user = await this.userRepository.findOne({
       where: { email: email }
     });
@@ -124,6 +155,14 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       where: { username: username }
     });
     if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given username"));
+    return user;
+  }
+
+  async getTwoFactorUserByEmail(email: string) {
+    const user = await this.twoFactorUserRepository.findOne({
+      where: {email: email}
+    });
+    if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given email"));
     return user;
   }
 }

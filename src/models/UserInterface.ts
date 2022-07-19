@@ -1,10 +1,9 @@
-type RegistrationData = {
+interface UserInterface {
   username: string,
   firstName: string,
   lastName: string,
   email: string,
   password: string,
-  twoFactorAuthentication: boolean,
-};
+}
 
-export default RegistrationData;
+export default UserInterface;

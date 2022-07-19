@@ -4,7 +4,7 @@ type LoginData = {
   email: string,
   password: string,
   twoFactorAuthentication: boolean,
-  twoFactorAuthenticationData?: [TwoFactorAuthenticationData],
+  twoFactorAuthenticationData?: TwoFactorAuthenticationData,
 };
 
 export default LoginData;

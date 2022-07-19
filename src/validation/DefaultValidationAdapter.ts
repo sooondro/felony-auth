@@ -29,11 +29,4 @@ export default class DefaultValidationAdapter implements ValidationAdapterInterf
       this.errorAdapter.throwLoginValidationError(new Error("Password needs to be at least 6 characters long"));
     }
   }
-  isEmail(email: string): boolean {
-    throw new Error("Method not implemented.");
-  }
-  isEmptyString(string: string) {
-    throw new Error("Method not implemented.");
-  }
-
 }

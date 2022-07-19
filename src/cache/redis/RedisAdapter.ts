@@ -1,17 +1,36 @@
+import { createClient, RedisFunctions, RedisModules, RedisScripts } from "redis";
+
+import RedisSession from "./RedisSession";
+
 import CacheAdapterInterface from "../CacheAdapterInterface";
 import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
+import UserInterface from "../../models/UserInterface";
+import SessionInterface from "../../models/SessionInterface";
+import { RedisClientType } from "@redis/client";
 
 export default class RedisAdapter implements CacheAdapterInterface {
 
-	constructor(private errorAdapter: ErrorAdapterInterface) { }
+	constructor(private errorAdapter: ErrorAdapterInterface, url: string) { 
+		this.client = createClient({
+			url,
+		});
 
-	createSession(payload: object) {
-		throw new Error("Method not implemented.");
+		this.client.connect();
 	}
-	getSessions(payload: object) {
-		throw new Error("Method not implemented.");
+
+	private client;
+
+	async createSession(payload: UserInterface): Promise<string> {
+		const session = new RedisSession(payload);
+		await this.client.set(session.key, session.value);
+		return session.key;
 	}
-	logout(payload: object) {
-		throw new Error("Method not implemented.");
+
+	async getSession(key: string): Promise<SessionInterface> {
+		return await this.client.get(key);
+	}
+
+	async logout(key: string) {
+		await this.client.del(key);
 	}
 }

@@ -1,5 +1,6 @@
 // import { Model, DataTypes } from 'sequelize';
 // import PostgresAdapter from "../PostgresAdapter";
+import UserInterface from '../../../models/UserInterface';
 
 // import { Optional } from "sequelize";
 import { Table, Column, Model } from 'sequelize-typescript';
@@ -20,13 +21,11 @@ import { Table, Column, Model } from 'sequelize-typescript';
 // }) 
 // class User extends Model<UserAttributes, UserCreationAttributes> {
 
-@Table({
-  timestamps: true,
-})
-export default class User extends Model {
-  @Column
-  id: number
-
+// @Table({
+//   timestamps: true,
+// })
+@Table
+export default class User extends Model<UserInterface> {
   @Column
   username: string
 
@@ -42,6 +41,16 @@ export default class User extends Model {
   @Column
   password: string
 }
+
+
+  //      lxBm9JvgGSs1CyfzVskp8IVBx7Tl7QJ6P - sendgrid pass
+  // @CreatedAt
+  // @Column
+  // createdat: Date
+
+  // @UpdatedAt
+  // @Column
+  // updatedat: Date
 
 
 // class User extends Model { }

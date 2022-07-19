@@ -1,7 +1,6 @@
 type twoFactorAuthenticationData = {
-  provider: string,
-  secret: string,
-  token: string,
+  email: string,
+  code: string,
 };
 
 export default twoFactorAuthenticationData;
