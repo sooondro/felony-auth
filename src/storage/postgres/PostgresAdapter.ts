@@ -5,6 +5,8 @@ import RegistrationData from "../../types/RegistrationData";
 import LoginData from '../../types/LoginData';
 import PostgresConnectionData from "../../types/PostgresConnectionData";
 import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
+import AuthenticableUser from "../../types/AuthenticableUser";
+import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 
 import User from "./models/User";
 import TwoFactorUser from "./models/TwoFactorUser";
@@ -12,25 +14,32 @@ import TwoFactorUser from "./models/TwoFactorUser";
 import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import StorageAdapterInterface from "../StorageAdapterInterface";
 
+
 export default class PostgresAdapter implements StorageAdapterInterface {
 
-  private client: Sequelize;
-  private userRepository: Repository<User>;
-  private twoFactorUserRepository: Repository<TwoFactorUser>;
+  private client!: Sequelize;
+  private userRepository!: Repository<User>;
+  private twoFactorUserRepository!: Repository<TwoFactorUser>;
   private errorAdapter: ErrorAdapterInterface;
 
   constructor(
     errorAdapter: ErrorAdapterInterface,
-    connectionUri?: string,
-    config?: PostgresConnectionData,
+    connectionUri: string,
+    // config?: PostgresConnectionData,
   ) {
     this.errorAdapter = errorAdapter;
 
-    config
-      ? this.setupPostgresConnectionWithConfig(config)
-      : this.setupPostgresConnectionWithUri(connectionUri);
+    this.setupPostgresConnectionWithUri(connectionUri)
+    // if (config) this.setupPostgresConnectionWithConfig(config);
+    // else this.setupPostgresConnectionWithUri(connectionUri)
   }
 
+  /**
+   * Set up Postgres client with the config object
+   * 
+   * @param {PostgresConnectionData} config 
+   * @throws
+   */
   async setupPostgresConnectionWithConfig(config: PostgresConnectionData) {
     this.client = new Sequelize(
       {
@@ -48,6 +57,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     await this.authenticateConnection();
   }
 
+  /**
+   * Set up Postgres client with connection string
+   * 
+   * @param {string} connectionUri 
+   * @throws
+   */
   async setupPostgresConnectionWithUri(connectionUri: string) {
     this.client = new Sequelize(
       connectionUri,
@@ -60,6 +75,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     await this.authenticateConnection();
   }
 
+  /**
+   * Authenticate Postgres client connection
+   * @throws 
+   */
   async authenticateConnection() {
     try {
       await this.client.authenticate();
@@ -67,11 +86,19 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       this.twoFactorUserRepository = this.client.getRepository(TwoFactorUser);
 
     } catch (error) {
-      this.errorAdapter.throwStorageConnectionError(error);
+      if (error instanceof Error)
+        this.errorAdapter.throwStorageConnectionError(error);
     }
   }
 
-  async register(payload: RegistrationData): Promise<User> {
+  /**
+   * Add new user to the database
+   * 
+   * @param {RegistrationData} payload 
+   * @return {Promise<AuthenticableUser>}
+   * @throws
+   */
+  async register(payload: RegistrationData): Promise<AuthenticableUser | void> {
     let hashedPassword: string;
     try {
       hashedPassword = await Bcrypt.hash(payload.password, 12);
@@ -88,32 +115,95 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       });
 
       if (!created) {
-        this.errorAdapter.throwRegistrationError(new Error("User already exists"));
+        throw new Error("User already exists");
       }
-      return user;
+      return user as AuthenticableUser;
     } catch (error) {
-      this.errorAdapter.throwRegistrationError(error);
+      if (error instanceof Error)
+        this.errorAdapter.throwRegistrationError(error);
     }
   }
 
-  async login(payload: LoginData): Promise<User> {
+  /**
+   * Login user
+   * 
+   * @param {LoginData} payload 
+   * @return {Promise<User>}
+   * @throws
+   */
+  async login(payload: LoginData): Promise<AuthenticableUser | void> {
     try {
       const user = await this.getUserByEmail(payload.email);
-      if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given email"));
+      if (!user) throw new Error("No user found with the given email");
 
       const result = await Bcrypt.compare(payload.password, user.password);
-      if (!result) this.errorAdapter.throwLoginError(new Error("Wrong email or password"));
+      if (!result) throw new Error("Wrong email or password");
 
-      return user;
+      return user as AuthenticableUser;
     } catch (error) {
-      this.errorAdapter.throwLoginError(error);
+      if (error instanceof Error)
+        this.errorAdapter.throwLoginError(error);
     }
   }
 
-  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData) {
+
+
+  /**
+   * Fetch user from the database by email
+   * 
+   * @param {string} email 
+   * @return {Promise<User>}
+   * @throws 
+   */
+  async getUserByEmail(email: string): Promise<AuthenticableUser | null> {
+    console.log(email);
+
+    const user = await this.userRepository.findOne({
+      where: { email: email }
+    });
+    // if (!user) this.errorAdapter.throwDataNotFoundError(new Error("No user found with the given email"));
+    return user as AuthenticableUser;
+  }
+
+  /**
+   * Fetch user from the database by id
+   * 
+   * @param {string} id 
+   * @return {Promise<User>}
+   * @throws Login Error
+   */
+  async getUserById(id: string): Promise<AuthenticableUser | null> {
+    const user = await this.userRepository.findByPk(id);
+    // if (!user) this.errorAdapter.throwDataNotFoundError(new Error("No user found with the key"));
+    return user as AuthenticableUser;
+  }
+
+
+  /**
+   * Fetch user from the database by username
+   * 
+   * @param {string} username 
+   * @return {Promise<User>}
+   */
+  async getUserByUsername(username: string): Promise<AuthenticableUser | null> {
+    const user = await this.userRepository.findOne({
+      where: { username: username }
+    });
+    // if (!user) this.errorAdapter.throwDataNotFoundError(new Error("No user found with the given username"));
+    return user as AuthenticableUser;
+  }
+
+  /**
+   * Register two-factor user
+   * 
+   * @param {TwoFactorRegistrationData} twoFactorUser 
+   * @return {Promise<AuthenticableTwoFactorUser>}
+   * @throws
+   */
+  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser|undefined> {
     try {
       console.log("MDA USLO JE U 2FA REGISTRATION");
-      
+
       const [user, created] = await this.twoFactorUserRepository.findOrCreate({
         where: { email: twoFactorUser.email },
         defaults: {
@@ -124,46 +214,28 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       });
       console.log("KREIRALO JE 2FA USER", user);
 
-      if(!created) {
-        this.errorAdapter.throwTwoFactorRegistrationError(new Error("Two factor user already exists"));
-      }
-      
-      return user;
+      if (!created)
+        throw new Error("Two factor user already exists");
+
+      return user as AuthenticableTwoFactorUser;
     } catch (error) {
-      this.errorAdapter
+      if (error instanceof Error)
+        this.errorAdapter.throwTwoFactorRegistrationError(error);
     }
   }
 
-  async getUserByEmail(email: string): Promise<User> {
-    console.log(email);
-
-    const user = await this.userRepository.findOne({
+  /**
+   * Fetch two-factor user from the database by email
+   * 
+   * @param {string} email 
+   * @return {Promise<TwoFactorUser>}
+   */
+  async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
+    const user = await this.twoFactorUserRepository.findOne({
       where: { email: email }
     });
-    if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given email"));
-    return user;
-  }
-
-  async getUserById(id: string): Promise<User> {
-    const user = await this.userRepository.findByPk(id);
-    if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the key"));
-    return user;
-  }
-
-  async getUserByUsername(username: string): Promise<User> {
-    const user = await this.userRepository.findOne({
-      where: { username: username }
-    });
-    if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given username"));
-    return user;
-  }
-
-  async getTwoFactorUserByEmail(email: string) {
-    const user = await this.twoFactorUserRepository.findOne({
-      where: {email: email}
-    });
-    if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given email"));
-    return user;
+    // if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given email"));
+    return user as AuthenticableTwoFactorUser;
   }
 }
 

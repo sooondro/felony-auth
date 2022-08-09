@@ -1,7 +1,8 @@
-import twoFactorAuthenticationData from "../../types/TwoFactorAuthenticationData";
+import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
+import TwoFactorAuthenticationData from "../../types/TwoFactorAuthenticationData";
 
 export default interface TwoFactorProviderInterface {
 	provider: string,
-	verify(providerData: twoFactorAuthenticationData);
-	register(email: string);
+	verify(userData: TwoFactorAuthenticationData): Promise<AuthenticableTwoFactorUser | undefined>;
+	register(email: string): Promise<string|undefined>;
 }

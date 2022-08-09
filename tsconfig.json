@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "strict": true,
     "moduleResolution": "node",
     "pretty": true,
     "sourceMap": true,

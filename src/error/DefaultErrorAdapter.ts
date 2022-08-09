@@ -1,36 +1,104 @@
 import ErrorAdapterInterface from "./ErrorAdapterInterface";
 
+/**
+ * Default error adapter
+ * 
+ * @type {Class}
+ */
 export default class DefaultErrorAdapter implements ErrorAdapterInterface {
-  throwTwoFactorVerificationError(error: Error) {
+
+  /**
+   * Throw data not found error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwDataNotFoundError(error: Error): never {
     throw error;
   }
-  throwTwoFactorRegistrationError(error: Error): void {
+
+  /**
+   * Throw two-factor verification error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwTwoFactorVerificationError(error: Error): never {
     throw error;
   }
-  throwLoginValidationError(error: Error): void {
+
+  /**
+   * Throw two-factor registration error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwTwoFactorRegistrationError(error: Error): never {
+    throw error;
+  }
+
+  /**
+   * Throw login validation error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwLoginValidationError(error: Error): never {
     // throw new Error(`Login validation error: ${error.message}`);
     throw error;
-
   }
-  throwLoginError(error: Error): void {
+
+  /**
+   * Throw login error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwLoginError(error: Error): never {
     // throw new Error(`Login error: ${error.message}`);
     throw error;
   }
-  throwTwoFactorProviderError(error: Error) {
+
+  /**
+   * Throw two-factor provider error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwTwoFactorProviderError(error: Error): never {
     // throw new Error(`Two factor provider error: ${error.message}`);
     throw error;
   }
-  throwRegistrationValidationError(error: Error) {
+
+  /**
+   * Throw registration validation error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwRegistrationValidationError(error: Error): never {
     // throw new Error(`Registration validation error: ${error.message}`);
     throw error;
   }
 
-  throwRegistrationError(error: Error) {
+  /**
+   * Throw registration error
+   * 
+   * @param error 
+   * @throws {Error}
+   */
+  throwRegistrationError(error: Error): never {
     // throw new Error(`Registration error: ${error.message}`);
     throw error;
   }
 
-  throwStorageConnectionError(error: Error) {
+  /**
+   * Throw storage connection error
+   * 
+   * @param error
+   * @throws {Error}
+   */
+  throwStorageConnectionError(error: Error): never {
     // throw new Error(`Storage connection error: ${error.message}`)
     throw error;
   }

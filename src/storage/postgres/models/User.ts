@@ -5,6 +5,47 @@ import UserInterface from '../../../models/UserInterface';
 // import { Optional } from "sequelize";
 import { Table, Column, Model } from 'sequelize-typescript';
 
+/**
+ * Definition for user model schema
+ * 
+ * @type {Schema}
+ */
+@Table
+export default class User extends Model<UserInterface> {
+  /**
+   * Person username
+   */
+  @Column
+  username!: string;
+  
+  /**
+   * Person first name
+   */
+  @Column
+  firstName!: string;
+  
+  /**
+   * Person last name
+   */
+  @Column
+  lastName!: string;
+  
+  /**
+   * Person email
+   */
+  @Column
+  email!: string;
+  
+  /**
+   * Person password
+   */
+  @Column
+  password!: string;
+}
+
+
+
+
 // interface UserAttributes {
 //   id: number,
 //   username: string,
@@ -24,29 +65,11 @@ import { Table, Column, Model } from 'sequelize-typescript';
 // @Table({
 //   timestamps: true,
 // })
-@Table
-export default class User extends Model<UserInterface> {
-  @Column
-  username: string
-
-  @Column
-  firstName: string
-
-  @Column
-  lastName: string
-
-  @Column
-  email: string
-
-  @Column
-  password: string
-}
 
 
-  //      lxBm9JvgGSs1CyfzVskp8IVBx7Tl7QJ6P - sendgrid pass
-  // @CreatedAt
-  // @Column
-  // createdat: Date
+// @CreatedAt
+// @Column
+// createdat: Date
 
   // @UpdatedAt
   // @Column

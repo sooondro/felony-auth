@@ -2,19 +2,19 @@ import StorageAdapterInterface from "./storage/StorageAdapterInterface";
 import CacheAdapterInterface from "./cache/CacheAdapterInterface";
 import ErrorAdapterInterface from "./error/ErrorAdapterInterface";
 import ValidationAdapterInterface from "./validation/ValidationAdapterInterface";
-import BehaviourProviderInterface from "./providers/behaviour/BehaviourProviderInterface";
 import TwoFactorProviderInterface from "./providers/two-factor/TwoFactorProviderInterface";
+// import BehaviourProviderInterface from "./providers/behaviour/BehaviourProviderInterface";
 
 
-import PostgresAdapter from "./storage/postgres/PostgresAdapter";
-import DefaultValidationAdapter from './validation/DefaultValidationAdapter';
-import DefaultErrorAdapter from "./error/DefaultErrorAdapter";
+// import PostgresAdapter from "./storage/postgres/PostgresAdapter";
+// import DefaultValidationAdapter from './validation/DefaultValidationAdapter';
+// import DefaultErrorAdapter from "./error/DefaultErrorAdapter";
 
 // import PostgresConnectionData from "./types/PostgresConnectionData";
 import RegistrationData from "./types/RegistrationData";
 import LoginData from "./types/LoginData";
 import UserInterface from "./models/UserInterface";
-import twoFactorAuthenticationData from "./types/TwoFactorAuthenticationData";
+import TwoFactorAuthenticationData from "./types/TwoFactorAuthenticationData";
 
 // const postgresConfig: PostgresConnectionData = {
 // 	database: "felony",
@@ -24,17 +24,17 @@ import twoFactorAuthenticationData from "./types/TwoFactorAuthenticationData";
 // 	port: 55000
 // }
 
-const postgresConnectionUri = "postgres://postgres:postgrespw@localhost:55000/felony";
+// const postgresConnectionUri = "postgres://postgres:postgrespw@localhost:55000/felony";
 
 export default class Authentication {
 
-	private _errorAdapter: ErrorAdapterInterface;
-	private _validationAdapter: ValidationAdapterInterface;
-	private _storageAdapter: StorageAdapterInterface;
-	private _globalAuthConfig: object;
-	private _cacheAdapter: CacheAdapterInterface;
+	private _errorAdapter!: ErrorAdapterInterface;
+	private _validationAdapter!: ValidationAdapterInterface;
+	private _storageAdapter!: StorageAdapterInterface;
+	private _globalAuthConfig!: object;
+	private _cacheAdapter!: CacheAdapterInterface;
 	// private _twoFactorProviders: Map<string, TwoFactorProviderInterface>;
-	private _twoFactorProvider: TwoFactorProviderInterface;
+	private _twoFactorProvider!: TwoFactorProviderInterface;
 
 	public get errorAdapter() {
 		return this._errorAdapter;
@@ -75,8 +75,9 @@ export default class Authentication {
 	public get twoFactorProvider() {
 		return this._twoFactorProvider;
 	}
-
-
+	public get globalAuthConfig() {
+		return this._globalAuthConfig;
+	}
 
 	/**
 	 * 
@@ -90,19 +91,12 @@ export default class Authentication {
 
 	// this.twoFactorProviders[payloadIzRegister.provider]
 
-	// provider string bi trebao biti enum ili validiran da je unutar definiranih vrijednosti za otp
-	// ideja za validaciju: string providera in (Objec.keys(twoFactorProviders))
-
-	// ERROR logika
-	// REGISTER logika
-	// TYPES direktorij
-	// USER model - User file unutar postgres foldera ili spremit unutar adaptera, pa unutar konstruktora 
-	// Proslijediti error adapter unutar konstruktora validatora i storageAdaptera
-
-	public get globalAuthConfig() {
-		return this._globalAuthConfig;
-	}
-
+	/**
+	 * Register user.
+	 * 
+	 * @param {RegistrationData} payload
+	 * @return {User|{User, string}}
+	 */
 	async register(payload: RegistrationData) {
 		this._validationAdapter.registration(payload);
 
@@ -111,10 +105,7 @@ export default class Authentication {
 		// 		await this._twoFactorProviders.get(providerData.provider).validate(providerData);
 		// 	});
 		// }
-		console.log("PRIJE POSTGRES REGISTRACIJA");
 		const user = await this._storageAdapter.register(payload);
-		console.log("POSTGRES REGISTRACIJA");
-		
 
 		if(!payload.twoFactorAuthentication) {
 			// payload.twoFactorAuthenticationData.forEach(providerData => {
@@ -141,31 +132,59 @@ export default class Authentication {
 		}; 
 	}
 
-	async login(payload: LoginData): Promise<string | Error> {
+
+	/**
+	 * Login user
+	 * 
+	 * @param {LoginData} payload 
+	 * @return {string}
+	 */
+	async login(payload: LoginData): Promise<string|undefined> {
 		this._validationAdapter.login(payload);
 		
-		const user = await this._storageAdapter.login(payload) as UserInterface;
-		
-		let twoFactorUser;
-		if (payload.twoFactorAuthentication) {
-			twoFactorUser = await this._twoFactorProvider.verify(payload.twoFactorAuthenticationData);
+		const user = await this._storageAdapter.login(payload);
+
+		if (user) {
+			let twoFactorUser;
+			if (payload.twoFactorAuthentication && payload.twoFactorAuthenticationData) {
+				twoFactorUser = await this._twoFactorProvider.verify(payload.twoFactorAuthenticationData);
+			}
+			
+			const sessionId = await this._cacheAdapter.createSession(user);
+			return sessionId;
 		}
-		
-		const sessionId = await this._cacheAdapter.createSession(user);
-		return sessionId;
 	}
 	
-	async verifyTwoFactorUser(user: twoFactorAuthenticationData) {
+
+
+	async verifyTwoFactorUser(user: TwoFactorAuthenticationData) {
 		await this._twoFactorProvider.verify(user);
 	}
 	
+
+	/**
+	 * Logout user
+	 * 
+	 * @param {string} sessionId 
+	 */
 	async logout(sessionId: string): Promise<void> {
 		await this._cacheAdapter.logout(sessionId);
 	}
 	
-	async getSessions(sessionId: string): Promise<void> {
-		await this._cacheAdapter.getSession(sessionId);
+
+	/**
+	 * 
+	 * @param sessionId 
+	 * @return 
+	 */
+	async getSessions(sessionId: string): Promise<object> {
+		return await this._cacheAdapter.getSession(sessionId);
 	}
+
+	/**
+	 * 
+	 * @param {UserInterface} payload 
+	 */
 	async createSession(payload: UserInterface): Promise<void> {
 		await this._cacheAdapter.createSession(payload);
 	}
@@ -175,7 +194,6 @@ export default class Authentication {
 	// 	if (!this._twoFactorProviders.has(twoFactorProvider)) this._errorAdapter.throwTwoFactorProviderError(new Error("No provider found with the given name"))
 	// 	this._twoFactorProviders.delete(twoFactorProvider);
 	// }
-	// GlobalAuthConfig???????????????
 
 	// async getUserById(id: string): Promise<void> {
 	// 	try {
@@ -192,10 +210,4 @@ export default class Authentication {
 	// 		throw error;
 	// 	}
 	// }
-
-
-
-
-
-
 }

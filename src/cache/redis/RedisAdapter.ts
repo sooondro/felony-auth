@@ -1,4 +1,4 @@
-import { createClient, RedisFunctions, RedisModules, RedisScripts } from "redis";
+import { createClient } from "redis";
 
 import RedisSession from "./RedisSession";
 
@@ -6,8 +6,11 @@ import CacheAdapterInterface from "../CacheAdapterInterface";
 import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import UserInterface from "../../models/UserInterface";
 import SessionInterface from "../../models/SessionInterface";
-import { RedisClientType } from "@redis/client";
+import AuthenticableUser from "../../types/AuthenticableUser";
 
+/**
+ * Redis adapter
+ */
 export default class RedisAdapter implements CacheAdapterInterface {
 
 	constructor(private errorAdapter: ErrorAdapterInterface, url: string) { 
@@ -20,17 +23,37 @@ export default class RedisAdapter implements CacheAdapterInterface {
 
 	private client;
 
-	async createSession(payload: UserInterface): Promise<string> {
+	/**
+	 * Create redis session
+	 * 
+	 * @param {UserInterface} payload 
+	 * @return {Promise<string>}
+	 */
+	async createSession(payload: AuthenticableUser): Promise<string> {
 		const session = new RedisSession(payload);
-		await this.client.set(session.key, session.value);
-		return session.key;
+		const sessionValue = {
+			csrf: session.csrf,
+			user: session.user,
+		}
+		await this.client.set(session.id, sessionValue);
+		return session.id;
 	}
 
-	async getSession(key: string): Promise<SessionInterface> {
-		return await this.client.get(key);
+	/**
+	 * 
+	 * @param {string} id 
+	 * @return {Promise<SessionInterface>}
+	 */
+	async getSession(id: string): Promise<SessionInterface> {
+		return await this.client.get(id);
 	}
 
-	async logout(key: string) {
-		await this.client.del(key);
+	/**
+	 * Logout user
+	 * 
+	 * @param {string} id 
+	 */
+	async logout(id: string) {
+		await this.client.del(id);
 	}
 }

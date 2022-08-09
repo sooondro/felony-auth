@@ -1,6 +1,6 @@
-type twoFactorAuthenticationData = {
+type TwoFactorAuthenticationData = {
   email: string,
   code: string,
 };
 
-export default twoFactorAuthenticationData;
+export default TwoFactorAuthenticationData;
