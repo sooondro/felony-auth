@@ -64,7 +64,6 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
     };
 
     const user = await this._storageAdapter.registerTwoFactorUser(userData);
-    console.log("2FA USER ", user);
 
     if (user) {
       return await QRCode.toDataURL(authenticator.keyuri(email, '2FA Felony', user.secret));
