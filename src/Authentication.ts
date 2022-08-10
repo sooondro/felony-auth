@@ -102,20 +102,10 @@ export default class Authentication {
 
 		// 	return user;
 		// }
-		if (!payload.twoFactorAuthentication) {
-			return user;
+		if (payload.twoFactorAuthentication) {
+			await this._twoFactorProvider.register(payload.email);
 		}
-
-		console.log("PRIJE 2FA");
-
-		const twoFactorUser = await this._twoFactorProvider.register(payload.email);
-
-		console.log("DOSLO JE 2FA");
-		console.log(twoFactorUser);
-		return {
-			user,
-			twoFactorUser,
-		};
+		return user;
 	}
 
 	/**
