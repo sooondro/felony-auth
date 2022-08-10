@@ -1,29 +1,35 @@
-import UserInterface from '../models/UserInterface';
+import AuthenticableUser from '../types/AuthenticableUser';
+import Session from '../types/Session';
 
 /**
- * Cache adapter interface
+ * Cache adapter interface.
  * 
  * @type {Interface}
  */
 export default interface CacheAdapterInterface {
 	/**
-	 * Create session
+	 * Create session.
 	 * 
-	 * @param {UserInterface} payload
+	 * @param {AuthenticableUser} payload
 	 */
-	createSession(payload: UserInterface): Promise<string>;
+	createSession(payload: AuthenticableUser): Promise<string>;
 
 	/**
-	 * Get session
+	 * Get session.
 	 * 
-	 * @param {string} key
+	 * @param {string} id
 	 */
-	getSession(key: string): object; //PITANJE
+	getSession(id: string): Promise<Session>;
 
 	/**
-	 * Logout user
+	 * Logout user.
 	 * 
-	 * @param {string} key
+	 * @param {string} id
 	 */
-	logout(key: string): void;
+	logout(id: string): void;
+
+	/**
+	 * Validate received csrf token with the one stored in the session.
+	 */
+	validateCSRF(sessionId: string, token: string): void;
 }

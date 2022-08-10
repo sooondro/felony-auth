@@ -26,14 +26,18 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
     this._errorAdapter = errorAdapter;
   }
 
+  /**
+   * Type of 2FA
+   */
   provider = "TOTP";
 
   /**
+   * Verifies the given code with the secret stored in the database.
    * 
    * @param {TwoFactorAuthenticationData} userData 
    * @returns 
    */
-  async verify(userData: TwoFactorAuthenticationData): Promise<AuthenticableTwoFactorUser | undefined> {
+  async verify(userData: TwoFactorAuthenticationData): Promise<AuthenticableTwoFactorUser | void> {
     const user = await this._storageAdapter.getTwoFactorUserByEmail(userData.email);
 
     if (user) {
@@ -44,7 +48,13 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
     }
   }
 
-  async register(email: string): Promise<string|undefined> {
+  /**
+   * Registers a new user 2FA user. Generates a secret for the new user and saves it in the database.
+   * 
+   * @param {string} email 
+   * @returns 
+   */
+  async register(email: string): Promise<string | void> {
     const secret = authenticator.generateSecret();
 
     const userData: TwoFactorRegistrationData = {
@@ -56,7 +66,8 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
     const user = await this._storageAdapter.registerTwoFactorUser(userData);
     console.log("2FA USER ", user);
 
-    if (user)
+    if (user) {
       return await QRCode.toDataURL(authenticator.keyuri(email, '2FA Felony', user.secret));
+    }
   }
 }

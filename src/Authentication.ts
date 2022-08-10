@@ -3,18 +3,12 @@ import CacheAdapterInterface from "./cache/CacheAdapterInterface";
 import ErrorAdapterInterface from "./error/ErrorAdapterInterface";
 import ValidationAdapterInterface from "./validation/ValidationAdapterInterface";
 import TwoFactorProviderInterface from "./providers/two-factor/TwoFactorProviderInterface";
-// import BehaviourProviderInterface from "./providers/behaviour/BehaviourProviderInterface";
 
-
-// import PostgresAdapter from "./storage/postgres/PostgresAdapter";
-// import DefaultValidationAdapter from './validation/DefaultValidationAdapter';
-// import DefaultErrorAdapter from "./error/DefaultErrorAdapter";
-
-// import PostgresConnectionData from "./types/PostgresConnectionData";
 import RegistrationData from "./types/RegistrationData";
 import LoginData from "./types/LoginData";
-import UserInterface from "./models/UserInterface";
+import Session from "./types/Session";
 import TwoFactorAuthenticationData from "./types/TwoFactorAuthenticationData";
+import AuthenticableUser from "./types/AuthenticableUser";
 
 // const postgresConfig: PostgresConnectionData = {
 // 	database: "felony",
@@ -80,24 +74,13 @@ export default class Authentication {
 	}
 
 	/**
-	 * 
-	 * u register paylodu ti se nalazi
-	 * {
-				provider: string,
-				secret: string,
-				token: string,
-			}
-	 */
-
-	// this.twoFactorProviders[payloadIzRegister.provider]
-
-	/**
 	 * Register user.
 	 * 
 	 * @param {RegistrationData} payload
 	 * @return {User|{User, string}}
 	 */
-	async register(payload: RegistrationData) {
+	async register(payload: RegistrationData)
+		: Promise<void | AuthenticableUser | { user: AuthenticableUser | void, twoFactorUser: string | void }> {
 		this._validationAdapter.registration(payload);
 
 		// if (payload.twoFactorAuthentication) {
@@ -107,87 +90,132 @@ export default class Authentication {
 		// }
 		const user = await this._storageAdapter.register(payload);
 
-		if(!payload.twoFactorAuthentication) {
-			// payload.twoFactorAuthenticationData.forEach(providerData => {
-			// 	if (!this._twoFactorProviders.has(providerData.provider)) {
-			// 		this._errorAdapter.throwTwoFactorProviderError(new Error("Invalid 2fa provider name"));
-			// 	}
-				
-			// })
-			// return await this._twoFactorProvider
-			console.log("UPALO JE U NE2FA");
-			
+		// if(!payload.twoFactorAuthentication) {
+		// 	// payload.twoFactorAuthenticationData.forEach(providerData => {
+		// 	// 	if (!this._twoFactorProviders.has(providerData.provider)) {
+		// 	// 		this._errorAdapter.throwTwoFactorProviderError(new Error("Invalid 2fa provider name"));
+		// 	// 	}
+
+		// 	// })
+		// 	// return await this._twoFactorProvider
+		// 	console.log("UPALO JE U NE2FA");
+
+		// 	return user;
+		// }
+		if (!payload.twoFactorAuthentication) {
 			return user;
 		}
+
 		console.log("PRIJE 2FA");
-		
+
 		const twoFactorUser = await this._twoFactorProvider.register(payload.email);
-		
+
 		console.log("DOSLO JE 2FA");
 		console.log(twoFactorUser);
-		
 		return {
 			user,
 			twoFactorUser,
-		}; 
+		};
 	}
 
-
 	/**
-	 * Login user
+	 * Login user.
 	 * 
 	 * @param {LoginData} payload 
 	 * @return {string}
 	 */
-	async login(payload: LoginData): Promise<string|undefined> {
+	async login(payload: LoginData): Promise<string | undefined> {
 		this._validationAdapter.login(payload);
-		
+
 		const user = await this._storageAdapter.login(payload);
 
 		if (user) {
-			let twoFactorUser;
 			if (payload.twoFactorAuthentication && payload.twoFactorAuthenticationData) {
-				twoFactorUser = await this._twoFactorProvider.verify(payload.twoFactorAuthenticationData);
+				await this._twoFactorProvider.verify(payload.twoFactorAuthenticationData);
 			}
-			
+
 			const sessionId = await this._cacheAdapter.createSession(user);
 			return sessionId;
 		}
 	}
-	
-
-
-	async verifyTwoFactorUser(user: TwoFactorAuthenticationData) {
-		await this._twoFactorProvider.verify(user);
-	}
-	
 
 	/**
-	 * Logout user
+	 * Setup 2FA for user by email.
+	 * 
+	 * @param {string} email 
+	 * @returns {string}
+	 */
+	async setup2FAByEmail(email: string): Promise<string | void> {
+		return await this._twoFactorProvider.register(email);
+	}
+
+	/**
+	 * Setup 2fa for user by session ID.
+	 * 
+	 * @param {string} sessionId 
+	 * @returns {string}
+	 */
+	async setup2FABySessionId(sessionId: string): Promise<string | void> {
+		const session = await this.getSession(sessionId);
+
+		const email = session.user.email;
+
+		if (email) {
+			return await this.setup2FAByEmail(email);
+		}
+	}
+
+	/**
+	 * Verifies the user using the two-factor authentication.
+	 * 
+	 * @param {TwoFactorAuthenticationData} user 
+	 */
+	async verify2FAUser(user: TwoFactorAuthenticationData) {
+		await this._twoFactorProvider.verify(user);
+	}
+
+	/**
+	 * Validate whether the received csrf token is equal to the one stored in the user session.
+	 * 
+	 * @param {string} sessionId
+	 * @param {string} token
+	 */
+	async validateCSRFToken(sessionId: string, token: string): Promise<void> {
+		this._cacheAdapter.validateCSRF(sessionId, token);
+	}
+
+	/**
+	 * Logout user.
 	 * 
 	 * @param {string} sessionId 
 	 */
 	async logout(sessionId: string): Promise<void> {
-		await this._cacheAdapter.logout(sessionId);
+		this._cacheAdapter.logout(sessionId);
 	}
-	
 
 	/**
+	 * Retreive user session.
 	 * 
 	 * @param sessionId 
 	 * @return 
 	 */
-	async getSessions(sessionId: string): Promise<object> {
-		return await this._cacheAdapter.getSession(sessionId);
+	async getSession(sessionId: string): Promise<Session> {
+		return this._cacheAdapter.getSession(sessionId);
 	}
 
 	/**
+	 * Create user session.
 	 * 
-	 * @param {UserInterface} payload 
+	 * @param {AuthenticableUser} payload 
 	 */
-	async createSession(payload: UserInterface): Promise<void> {
-		await this._cacheAdapter.createSession(payload);
+	async createSession(payload: AuthenticableUser): Promise<string> {
+		return await this._cacheAdapter.createSession(payload);
 	}
+
+	async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
+		await this._storageAdapter.changePassword(email, oldPassword, newPassword);
+	}
+
 	// 2fa - salje se secret i token
 
 	// removeTwoFactorProvider(twoFactorProvider: string) {

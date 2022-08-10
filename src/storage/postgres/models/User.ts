@@ -1,46 +1,42 @@
-// import { Model, DataTypes } from 'sequelize';
-// import PostgresAdapter from "../PostgresAdapter";
 import UserInterface from '../../../models/UserInterface';
-
-// import { Optional } from "sequelize";
 import { Table, Column, Model } from 'sequelize-typescript';
 
 /**
- * Definition for user model schema
+ * Definition for user model schema.
  * 
  * @type {Schema}
  */
 @Table
 export default class User extends Model<UserInterface> {
   /**
-   * Person username
+   * User's username.
    */
   @Column
-  username!: string;
-  
+  username: string;
+
   /**
-   * Person first name
+   * User's first name.
    */
   @Column
-  firstName!: string;
-  
+  firstName: string;
+
   /**
-   * Person last name
+   * User's last name.
    */
   @Column
-  lastName!: string;
-  
+  lastName: string;
+
   /**
-   * Person email
+   * User's email.
    */
   @Column
-  email!: string;
-  
+  email: string;
+
   /**
-   * Person password
+   * User's password.
    */
   @Column
-  password!: string;
+  password: string;
 }
 
 

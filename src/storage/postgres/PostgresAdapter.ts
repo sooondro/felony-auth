@@ -17,9 +17,9 @@ import StorageAdapterInterface from "../StorageAdapterInterface";
 
 export default class PostgresAdapter implements StorageAdapterInterface {
 
-  private client!: Sequelize;
-  private userRepository!: Repository<User>;
-  private twoFactorUserRepository!: Repository<TwoFactorUser>;
+  private client: Sequelize;
+  private userRepository: Repository<User>;
+  private twoFactorUserRepository: Repository<TwoFactorUser>;
   private errorAdapter: ErrorAdapterInterface;
 
   constructor(
@@ -86,8 +86,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       this.twoFactorUserRepository = this.client.getRepository(TwoFactorUser);
 
     } catch (error) {
-      if (error instanceof Error)
-        this.errorAdapter.throwStorageConnectionError(error);
+      this.errorAdapter.throwStorageConnectionError(error);
     }
   }
 
@@ -99,9 +98,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws
    */
   async register(payload: RegistrationData): Promise<AuthenticableUser | void> {
-    let hashedPassword: string;
     try {
-      hashedPassword = await Bcrypt.hash(payload.password, 12);
+      const hashedPassword = await Bcrypt.hash(payload.password, 12);
 
       const [user, created] = await this.userRepository.findOrCreate({
         where: { email: payload.email },
@@ -117,10 +115,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       if (!created) {
         throw new Error("User already exists");
       }
+
       return user as AuthenticableUser;
     } catch (error) {
-      if (error instanceof Error)
-        this.errorAdapter.throwRegistrationError(error);
+      this.errorAdapter.throwRegistrationError(error);
     }
   }
 
@@ -133,20 +131,24 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async login(payload: LoginData): Promise<AuthenticableUser | void> {
     try {
-      const user = await this.getUserByEmail(payload.email);
-      if (!user) throw new Error("No user found with the given email");
+      const user = await this.userRepository.findOne({
+        where: { email: payload.email }
+      });
+
+      if (!user) {
+        throw new Error("No user found with the given email");
+      }
 
       const result = await Bcrypt.compare(payload.password, user.password);
-      if (!result) throw new Error("Wrong email or password");
+      if (!result) {
+        throw new Error("Wrong email or password");
+      }
 
       return user as AuthenticableUser;
     } catch (error) {
-      if (error instanceof Error)
-        this.errorAdapter.throwLoginError(error);
+      this.errorAdapter.throwLoginError(error);
     }
   }
-
-
 
   /**
    * Fetch user from the database by email
@@ -155,14 +157,19 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<User>}
    * @throws 
    */
-  async getUserByEmail(email: string): Promise<AuthenticableUser | null> {
-    console.log(email);
+  async getUserByEmail(email: string): Promise<AuthenticableUser | void> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email: email }
+      });
+      if (!user) {
+        throw new Error("No user found with the given email");
+      }
 
-    const user = await this.userRepository.findOne({
-      where: { email: email }
-    });
-    // if (!user) this.errorAdapter.throwDataNotFoundError(new Error("No user found with the given email"));
-    return user as AuthenticableUser;
+      return user as AuthenticableUser;
+    } catch (error) {
+      this.errorAdapter.throwStorageAdapterError(error);
+    }
   }
 
   /**
@@ -172,12 +179,18 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<User>}
    * @throws Login Error
    */
-  async getUserById(id: string): Promise<AuthenticableUser | null> {
-    const user = await this.userRepository.findByPk(id);
-    // if (!user) this.errorAdapter.throwDataNotFoundError(new Error("No user found with the key"));
-    return user as AuthenticableUser;
-  }
+  async getUserById(id: string): Promise<AuthenticableUser | void> {
+    try {
+      const user = await this.userRepository.findByPk(id);
+      if (!user) {
+        throw new Error("No user found with the given ID");
+      }
 
+      return user as AuthenticableUser;
+    } catch (error) {
+      this.errorAdapter.throwStorageAdapterError(error);
+    }
+  }
 
   /**
    * Fetch user from the database by username
@@ -185,12 +198,20 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @param {string} username 
    * @return {Promise<User>}
    */
-  async getUserByUsername(username: string): Promise<AuthenticableUser | null> {
-    const user = await this.userRepository.findOne({
-      where: { username: username }
-    });
-    // if (!user) this.errorAdapter.throwDataNotFoundError(new Error("No user found with the given username"));
-    return user as AuthenticableUser;
+  async getUserByUsername(username: string): Promise<AuthenticableUser | void> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { username: username }
+      });
+
+      if (!user) {
+        throw new Error("No user found with the given username");
+      }
+
+      return user as AuthenticableUser;
+    } catch (error) {
+      this.errorAdapter.throwStorageAdapterError(error);
+    }
   }
 
   /**
@@ -200,10 +221,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableTwoFactorUser>}
    * @throws
    */
-  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser|undefined> {
+  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser | void> {
     try {
-      console.log("MDA USLO JE U 2FA REGISTRATION");
-
       const [user, created] = await this.twoFactorUserRepository.findOrCreate({
         where: { email: twoFactorUser.email },
         defaults: {
@@ -212,30 +231,69 @@ export default class PostgresAdapter implements StorageAdapterInterface {
           secret: twoFactorUser.secret,
         }
       });
-      console.log("KREIRALO JE 2FA USER", user);
 
-      if (!created)
+      if (!created) {
         throw new Error("Two factor user already exists");
+      }
 
       return user as AuthenticableTwoFactorUser;
     } catch (error) {
-      if (error instanceof Error)
-        this.errorAdapter.throwTwoFactorRegistrationError(error);
+      this.errorAdapter.throwTwoFactorRegistrationError(error);
     }
   }
 
   /**
-   * Fetch two-factor user from the database by email
+   * Fetch two-factor user from the database by email.
    * 
    * @param {string} email 
    * @return {Promise<TwoFactorUser>}
    */
-  async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
-    const user = await this.twoFactorUserRepository.findOne({
-      where: { email: email }
-    });
-    // if (!user) this.errorAdapter.throwLoginError(new Error("No user found with the given email"));
-    return user as AuthenticableTwoFactorUser;
+  async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser | void> {
+    try {
+      const user = await this.twoFactorUserRepository.findOne({
+        where: { email: email }
+      });
+
+      if (!user) {
+        throw new Error("No user found with the given email");
+      }
+
+      return user as AuthenticableTwoFactorUser;
+    } catch (error) {
+      this.errorAdapter.throwTwoFactorProviderError(error);
+    }
+  }
+
+  /**
+   * Change user's password.
+   * 
+   * @param {string} email 
+   * @param {string} oldPassword 
+   * @param {string} newPassword 
+   */
+  async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { email: email }
+      });
+      if (!user) {
+        throw new Error("No user found with the given email");
+      }
+
+      const result = await Bcrypt.compare(oldPassword, user.password);
+      if (!result) {
+        throw new Error("Wrong email or password");
+      }
+
+      const newHashedPassword = await Bcrypt.hash(newPassword, 12);
+
+      await this.userRepository.update(
+        { password: newHashedPassword },
+        { where: { email: email } }
+      );
+    } catch (error) {
+      this.errorAdapter.throwStorageAdapterError(error);
+    }
   }
 }
 

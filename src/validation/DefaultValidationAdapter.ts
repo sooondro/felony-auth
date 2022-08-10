@@ -7,7 +7,7 @@ import LoginData from "../types/LoginData";
 import Validator from 'validator';
 
 /**
- * Default validation adapter implementation
+ * Default validation adapter implementation.
  * 
  * @type {Class}
  */
@@ -16,12 +16,12 @@ export default class DefaultValidationAdapter implements ValidationAdapterInterf
   constructor(private errorAdapter: ErrorAdapterInterface){}
 
   /**
-   * Validate registration data
+   * Validate registration data.
    * 
    * @param {RegistrationData} payload 
    * @throws 
    */
-  registration(payload: RegistrationData): void | Error {
+  registration(payload: RegistrationData): void {
     if(!Validator.isEmail(payload.email)) {
       this.errorAdapter.throwRegistrationValidationError(new Error("Invalid email"));
     }
@@ -32,12 +32,12 @@ export default class DefaultValidationAdapter implements ValidationAdapterInterf
   }
 
   /**
-   * Validate login data
+   * Validate login data.
    * 
    * @param payload 
    * @throws
    */
-  login(payload: LoginData): void | Error {
+  login(payload: LoginData): void {
     if (!Validator.isEmail(payload.email)) {
       this.errorAdapter.throwLoginValidationError(new Error("Invalid email"));
     }

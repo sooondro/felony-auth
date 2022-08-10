@@ -4,16 +4,15 @@ import RedisSession from "./RedisSession";
 
 import CacheAdapterInterface from "../CacheAdapterInterface";
 import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
-import UserInterface from "../../models/UserInterface";
-import SessionInterface from "../../models/SessionInterface";
 import AuthenticableUser from "../../types/AuthenticableUser";
+import Session from "../../types/Session";
 
 /**
- * Redis adapter
+ * Redis adapter.
  */
 export default class RedisAdapter implements CacheAdapterInterface {
 
-	constructor(private errorAdapter: ErrorAdapterInterface, url: string) { 
+	constructor(private errorAdapter: ErrorAdapterInterface, url: string) {
 		this.client = createClient({
 			url,
 		});
@@ -24,7 +23,7 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	private client;
 
 	/**
-	 * Create redis session
+	 * Create redis session.
 	 * 
 	 * @param {UserInterface} payload 
 	 * @return {Promise<string>}
@@ -40,20 +39,39 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	}
 
 	/**
+	 * Retreive user session.
 	 * 
 	 * @param {string} id 
-	 * @return {Promise<SessionInterface>}
+	 * @return {Promise<Session>}
 	 */
-	async getSession(id: string): Promise<SessionInterface> {
-		return await this.client.get(id);
+	async getSession(id: string): Promise<Session> {
+		const session = await this.client.get(id);
+		if (!session) {
+			this.errorAdapter.throwSessionAdapterError(new Error("Session not found"));
+		}
+
+		return session;
 	}
 
 	/**
-	 * Logout user
+	 * Logout user.
 	 * 
 	 * @param {string} id 
 	 */
 	async logout(id: string) {
 		await this.client.del(id);
+	}
+
+	/**
+	 * Validate whether the received csrf token is equal to the one stored in the user session.
+	 * 
+	 * @param {string} sessionId 
+	 * @param {string} token 
+	 */
+	async validateCSRF(sessionId: string, token: string): Promise<void> {
+		const session = await this.getSession(sessionId);
+		if (session.csrf !== token) {
+			this.errorAdapter.throwCSRFError(new Error("Invalid CSRF token"));
+		}
 	}
 }

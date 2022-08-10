@@ -1,11 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import SessionInterface from '../../models/SessionInterface';
-import UserInterface from "../../models/UserInterface";
 import AuthenticableUser from '../../types/AuthenticableUser';
 
 /**
- * Redis session
+ * Redis session.
  * 
  * @type {Class}
  */
@@ -15,22 +14,22 @@ export default class RedisSession implements SessionInterface {
     this._csrf = uuidv4();
     this._user = user;
   }
-  
+
   private _id: string;
   private _csrf: string;
   private _user: AuthenticableUser;
-  
+
   /**
-   * Get session id
+   * Get session id.
    * 
    * @return {string}
    */
   public get id() {
     return this._id;
   }
-  
+
   /**
-   * Get session csrf token
+   * Get session csrf token.
    * 
    * @return {string}
    */
@@ -39,7 +38,7 @@ export default class RedisSession implements SessionInterface {
   }
 
   /**
-   * Get session value
+   * Get session value.
    * 
    * @return {AuthenticableUser}
    */

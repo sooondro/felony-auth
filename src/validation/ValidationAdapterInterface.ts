@@ -3,24 +3,24 @@ import RegistrationData from "../types/RegistrationData";
 import LoginData from "../types/LoginData";
 
 /**
- * Validation adapter interface
+ * Validation adapter interface.
  * 
  * @type {Interface}
  */
 export default interface ValidationAdapterInterface {
   /**
-   * Validate registration data
+   * Validate registration data.
    * 
    * @param {RegistrationData} payload 
    * @throws
    */
-	registration(payload: RegistrationData): void | Error;
+	registration(payload: RegistrationData): void;
 
   /**
-   * Validate login data
+   * Validate login data.
    * 
    * @param {LoginData} payload 
    * @throws 
    */
-  login(payload: LoginData): void | Error;
+  login(payload: LoginData): void;
 }
