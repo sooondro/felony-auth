@@ -17,9 +17,9 @@ import StorageAdapterInterface from "../StorageAdapterInterface";
 
 export default class PostgresAdapter implements StorageAdapterInterface {
 
-  private client: Sequelize;
-  private userRepository: Repository<User>;
-  private twoFactorUserRepository: Repository<TwoFactorUser>;
+  private client!: Sequelize;
+  private userRepository!: Repository<User>;
+  private twoFactorUserRepository!: Repository<TwoFactorUser>;
   private errorAdapter: ErrorAdapterInterface;
 
   constructor(
@@ -86,7 +86,9 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       this.twoFactorUserRepository = this.client.getRepository(TwoFactorUser);
 
     } catch (error) {
-      this.errorAdapter.throwStorageConnectionError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwStorageConnectionError(error);
+      }
     }
   }
 
@@ -116,9 +118,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("User already exists");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwRegistrationError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwRegistrationError(error);
+      }
     }
   }
 
@@ -144,9 +150,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("Wrong email or password");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwLoginError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwLoginError(error);
+      }
     }
   }
 
@@ -166,9 +176,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given email");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
   }
 
@@ -186,9 +200,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given ID");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
   }
 
@@ -208,9 +226,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given username");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
   }
 
@@ -236,9 +258,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("Two factor user already exists");
       }
 
-      return user as AuthenticableTwoFactorUser;
+      const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwTwoFactorRegistrationError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwTwoFactorRegistrationError(error);
+      }
     }
   }
 
@@ -258,9 +284,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given email");
       }
 
-      return user as AuthenticableTwoFactorUser;
+      const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwTwoFactorProviderError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwTwoFactorProviderError(error);
+      }
     }
   }
 
@@ -292,8 +322,33 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         { where: { email: email } }
       );
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
+  }
+
+  convertUserToAuthenticableUser(user: User): AuthenticableUser {
+    const authUser: AuthenticableUser = {
+      id: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }
+
+    return authUser;
+  }
+
+  convertTwoFactorUserToAuthenticableTwoFactorUser(user: TwoFactorUser): AuthenticableTwoFactorUser {
+    const authUser: AuthenticableTwoFactorUser = {
+      id: user.id,
+      email: user.email,
+      provider: user.provider,
+      secret: user.secret
+    }
+
+    return authUser;
   }
 }
 
