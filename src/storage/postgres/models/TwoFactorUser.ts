@@ -25,11 +25,3 @@ export default class TwoFactorUser extends Model<TwoFactorUserInterface> {
   @Column
   secret!: string;
 }
-
-
-// CREATE TABLE "TwoFactorUsers" (
-//   id SERIAL PRIMARY KEY,
-//   email VARCHAR(256) NOT NULL,
-//   provider VARCHAR(256) NOT NULL,
-//   secret VARCHAR(256) NOT NULL
-// );

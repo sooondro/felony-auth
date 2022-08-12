@@ -15,6 +15,9 @@ import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import StorageAdapterInterface from "../StorageAdapterInterface";
 
 
+/**
+ * Storage adapter for the Postgres database
+ */
 export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client!: Sequelize;
@@ -35,7 +38,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Set up Postgres client with the config object
+   * Set up Postgres client with the config object.
    * 
    * @param {PostgresConnectionData} config 
    * @throws
@@ -58,7 +61,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Set up Postgres client with connection string
+   * Set up Postgres client with connection string.
    * 
    * @param {string} connectionUri 
    * @throws
@@ -76,7 +79,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Authenticate Postgres client connection
+   * Authenticate Postgres client connection.
    * @throws 
    */
   async authenticateConnection() {
@@ -93,10 +96,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Add new user to the database
+   * Add new user to the database.
    * 
    * @param {RegistrationData} payload 
-   * @return {Promise<AuthenticableUser>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws
    */
   async register(payload: RegistrationData): Promise<AuthenticableUser | void> {
@@ -129,10 +132,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Login user
+   * Login user.
    * 
    * @param {LoginData} payload 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws
    */
   async login(payload: LoginData): Promise<AuthenticableUser | void> {
@@ -161,10 +164,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Fetch user from the database by email
+   * Fetch user from the database by email.
    * 
    * @param {string} email 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws 
    */
   async getUserByEmail(email: string): Promise<AuthenticableUser | void> {
@@ -187,10 +190,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Fetch user from the database by id
+   * Fetch user from the database by id.
    * 
    * @param {string} id 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws Login Error
    */
   async getUserById(id: string): Promise<AuthenticableUser | void> {
@@ -211,10 +214,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Fetch user from the database by username
+   * Fetch user from the database by username.
    * 
    * @param {string} username 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    */
   async getUserByUsername(username: string): Promise<AuthenticableUser | void> {
     try {
@@ -237,10 +240,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Register two-factor user
+   * Register two-factor user.
    * 
    * @param {TwoFactorRegistrationData} twoFactorUser 
-   * @return {Promise<AuthenticableTwoFactorUser>}
+   * @return {Promise<AuthenticableTwoFactorUser | void>}
    * @throws
    */
   async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser | void> {
@@ -272,7 +275,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * Fetch two-factor user from the database by email.
    * 
    * @param {string} email 
-   * @return {Promise<TwoFactorUser>}
+   * @return {Promise<AuthenticableTwoFactorUser | void>}
    */
   async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser | void> {
     try {
@@ -300,6 +303,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @param {string} email 
    * @param {string} oldPassword 
    * @param {string} newPassword 
+   * @return {Promise<void>}
    */
   async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
     try {
@@ -328,6 +332,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     }
   }
 
+  /**
+   * Convert a class User object to object of type AuthenticableUser.
+   * 
+   * @param {User} user 
+   * @return {AuthenticableUser}
+   */
   convertUserToAuthenticableUser(user: User): AuthenticableUser {
     const authUser: AuthenticableUser = {
       id: user.id,
@@ -340,6 +350,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     return authUser;
   }
 
+  /**
+   * Convert a class TwoFactorUser object to object of type AuthenticableTwoFactorUser.
+   * 
+   * @param {TwoFactorUser} user 
+   * @return {AuthenticableTwoFactorUser}
+   */
   convertTwoFactorUserToAuthenticableTwoFactorUser(user: TwoFactorUser): AuthenticableTwoFactorUser {
     const authUser: AuthenticableTwoFactorUser = {
       id: user.id,
