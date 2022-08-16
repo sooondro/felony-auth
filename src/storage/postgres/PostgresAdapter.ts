@@ -24,8 +24,8 @@ import StorageAdapterInterface from "../StorageAdapterInterface";
 export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client!: Sequelize;
-  private userRepository!: Repository<User>;
-  private twoFactorUserRepository!: Repository<TwoFactorUser>;
+  // private userRepository!: Repository<User>;
+  // private twoFactorUserRepository!: Repository<TwoFactorUser>;
   private errorAdapter: ErrorAdapterInterface;
 
   constructor(
@@ -88,8 +88,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   async authenticateConnection() {
     try {
       await this.client.authenticate();
-      this.userRepository = this.client.getRepository(db.User);
-      this.twoFactorUserRepository = this.client.getRepository(db.TwoFactorUser);
+      // this.userRepository = this.client.getRepository(db.User);
+      // this.twoFactorUserRepository = this.client.getRepository(db.TwoFactorUser);
 
     } catch (error) {
       if (error instanceof Error) {
@@ -109,7 +109,17 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     try {
       const hashedPassword = await Bcrypt.hash(payload.password, 12);
 
-      const [user, created] = await this.userRepository.findOrCreate({
+      // const [user, created] = await this.userRepository.findOrCreate({
+      //   where: { email: payload.email },
+      //   defaults: {
+      //     username: payload.username,
+      //     firstName: payload.firstName,
+      //     lastName: payload.lastName,
+      //     email: payload.email,
+      //     password: hashedPassword,
+      //   }
+      // });
+      const [user, created] = await db.User.findOrCreate({
         where: { email: payload.email },
         defaults: {
           username: payload.username,
@@ -124,7 +134,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("User already exists");
       }
 
-      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      const authUser: AuthenticableUser = user;
 
       return authUser;
     } catch (error) {
@@ -143,7 +154,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async login(payload: LoginData): Promise<AuthenticableUser | void> {
     try {
-      const user = await this.userRepository.findOne({
+      // const user = await this.userRepository.findOne({
+      //   where: { email: payload.email }
+      // });
+      const user = await db.User.findOne({
         where: { email: payload.email }
       });
 
@@ -156,7 +170,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("Wrong email or password");
       }
 
-      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      const authUser: AuthenticableUser = user;
 
       return authUser;
     } catch (error) {
@@ -175,14 +190,21 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async getUserByEmail(email: string): Promise<AuthenticableUser | void> {
     try {
-      const user = await this.userRepository.findOne({
+      // const user = await this.userRepository.findOne({
+      //   where: { email: email }
+      // });
+      
+      const user = await db.User.findOne({
         where: { email: email }
       });
+
       if (!user) {
         throw new Error("No user found with the given email");
       }
 
-      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      const authUser: AuthenticableUser = user;
+
 
       return authUser;
     } catch (error) {
@@ -201,12 +223,16 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async getUserById(id: string): Promise<AuthenticableUser | void> {
     try {
-      const user = await this.userRepository.findByPk(id);
+      // const user = await this.userRepository.findByPk(id);
+      const user = await db.User.findByPk(id);
+
       if (!user) {
         throw new Error("No user found with the given ID");
       }
 
-      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      const authUser: AuthenticableUser = user;
+
 
       return authUser;
     } catch (error) {
@@ -224,7 +250,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async getUserByUsername(username: string): Promise<AuthenticableUser | void> {
     try {
-      const user = await this.userRepository.findOne({
+      // const user = await this.userRepository.findOne({
+      //   where: { username: username }
+      // });
+      const user = await db.User.findOne({
         where: { username: username }
       });
 
@@ -232,7 +261,9 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given username");
       }
 
-      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+      const authUser: AuthenticableUser = user;
+
 
       return authUser;
     } catch (error) {
@@ -251,7 +282,15 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser | void> {
     try {
-      const [user, created] = await this.twoFactorUserRepository.findOrCreate({
+      // const [user, created] = await this.twoFactorUserRepository.findOrCreate({
+      //   where: { email: twoFactorUser.email },
+      //   defaults: {
+      //     email: twoFactorUser.email,
+      //     provider: twoFactorUser.provider,
+      //     secret: twoFactorUser.secret,
+      //   }
+      // });
+      const [user, created] = await db.TwoFactorUser.findOrCreate({
         where: { email: twoFactorUser.email },
         defaults: {
           email: twoFactorUser.email,
@@ -264,7 +303,9 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("Two factor user already exists");
       }
 
-      const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+      // const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+      const authUser: AuthenticableTwoFactorUser = user;
+
 
       return authUser;
     } catch (error) {
@@ -282,7 +323,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser | void> {
     try {
-      const user = await this.twoFactorUserRepository.findOne({
+      // const user = await this.twoFactorUserRepository.findOne({
+      //   where: { email: email }
+      // });
+      const user = await db.TwoFactorUser.findOne({
         where: { email: email }
       });
 
@@ -290,7 +334,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given email");
       }
 
-      const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+      // const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+      const authUser: AuthenticableTwoFactorUser = user;
 
       return authUser;
     } catch (error) {
@@ -310,9 +355,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    */
   async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
     try {
-      const user = await this.userRepository.findOne({
+      // const user = await this.userRepository.findOne({
+      //   where: { email: email }
+      // });
+      const user = await db.User.findOne({
         where: { email: email }
       });
+
       if (!user) {
         throw new Error("No user found with the given email");
       }
@@ -324,7 +373,11 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
       const newHashedPassword = await Bcrypt.hash(newPassword, 12);
 
-      await this.userRepository.update(
+      // await this.userRepository.update(
+      //   { password: newHashedPassword },
+      //   { where: { email: email } }
+      // );
+      await db.User.update(
         { password: newHashedPassword },
         { where: { email: email } }
       );
@@ -335,39 +388,39 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     }
   }
 
-  /**
-   * Convert a class User object to object of type AuthenticableUser.
-   * 
-   * @param {User} user 
-   * @return {AuthenticableUser}
-   */
-  convertUserToAuthenticableUser(user: User): AuthenticableUser {
-    const authUser: AuthenticableUser = {
-      id: user.id,
-      username: user.username,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email
-    }
+  // /**
+  //  * Convert a class User object to object of type AuthenticableUser.
+  //  * 
+  //  * @param {User} user 
+  //  * @return {AuthenticableUser}
+  //  */
+  // convertUserToAuthenticableUser(user: User): AuthenticableUser {
+  //   const authUser: AuthenticableUser = {
+  //     id: user.id,
+  //     username: user.username,
+  //     firstName: user.firstName,
+  //     lastName: user.lastName,
+  //     email: user.email
+  //   }
 
-    return authUser;
-  }
+  //   return authUser;
+  // }
 
-  /**
-   * Convert a class TwoFactorUser object to object of type AuthenticableTwoFactorUser.
-   * 
-   * @param {TwoFactorUser} user 
-   * @return {AuthenticableTwoFactorUser}
-   */
-  convertTwoFactorUserToAuthenticableTwoFactorUser(user: TwoFactorUser): AuthenticableTwoFactorUser {
-    const authUser: AuthenticableTwoFactorUser = {
-      id: user.id,
-      email: user.email,
-      provider: user.provider,
-      secret: user.secret
-    }
+  // /**
+  //  * Convert a class TwoFactorUser object to object of type AuthenticableTwoFactorUser.
+  //  * 
+  //  * @param {TwoFactorUser} user 
+  //  * @return {AuthenticableTwoFactorUser}
+  //  */
+  // convertTwoFactorUserToAuthenticableTwoFactorUser(user: TwoFactorUser): AuthenticableTwoFactorUser {
+  //   const authUser: AuthenticableTwoFactorUser = {
+  //     id: user.id,
+  //     email: user.email,
+  //     provider: user.provider,
+  //     secret: user.secret
+  //   }
 
-    return authUser;
-  }
+  //   return authUser;
+  // }
 }
 
