@@ -30,11 +30,11 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	 */
 	async createSession(payload: AuthenticableUser): Promise<string> {
 		const session = new RedisSession(payload);
-		const sessionValue = {
-			csrf: session.csrf,
-			user: session.user,
-		}
-		await this.client.set(session.id, sessionValue);
+		// const sessionValue = {
+		// 	csrf: session.csrf,
+		// 	user: session.user,
+		// }
+		await this.client.set(session.id, JSON.stringify(session));
 		return session.id;
 	}
 
@@ -50,7 +50,9 @@ export default class RedisAdapter implements CacheAdapterInterface {
 			this.errorAdapter.throwSessionAdapterError(new Error("Session not found"));
 		}
 
-		return session;
+		const parsedSession: Session = JSON.parse(session);
+
+		return parsedSession;
 	}
 
 	/**
@@ -58,7 +60,7 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	 * 
 	 * @param {string} id 
 	 */
-	async logout(id: string) {
+	async logout(id: string): Promise<void> {
 		await this.client.del(id);
 	}
 

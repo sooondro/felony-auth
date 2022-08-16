@@ -12,31 +12,31 @@ export default class User extends Model<UserInterface> {
    * User's username.
    */
   @Column
-  username: string;
+  username!: string;
 
   /**
    * User's first name.
    */
   @Column
-  firstName: string;
+  firstName!: string;
 
   /**
    * User's last name.
    */
   @Column
-  lastName: string;
+  lastName!: string;
 
   /**
    * User's email.
    */
   @Column
-  email: string;
+  email!: string;
 
   /**
    * User's password.
    */
   @Column
-  password: string;
+  password!: string;
 }
 
 

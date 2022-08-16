@@ -26,7 +26,7 @@ export default interface CacheAdapterInterface {
 	 * 
 	 * @param {string} id
 	 */
-	logout(id: string): void;
+	logout(id: string): Promise<void>;
 
 	/**
 	 * Validate received csrf token with the one stored in the session.

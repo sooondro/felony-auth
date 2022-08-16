@@ -15,11 +15,14 @@ import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import StorageAdapterInterface from "../StorageAdapterInterface";
 
 
+/**
+ * Storage adapter for the Postgres database
+ */
 export default class PostgresAdapter implements StorageAdapterInterface {
 
-  private client: Sequelize;
-  private userRepository: Repository<User>;
-  private twoFactorUserRepository: Repository<TwoFactorUser>;
+  private client!: Sequelize;
+  private userRepository!: Repository<User>;
+  private twoFactorUserRepository!: Repository<TwoFactorUser>;
   private errorAdapter: ErrorAdapterInterface;
 
   constructor(
@@ -35,7 +38,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Set up Postgres client with the config object
+   * Set up Postgres client with the config object.
    * 
    * @param {PostgresConnectionData} config 
    * @throws
@@ -58,7 +61,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Set up Postgres client with connection string
+   * Set up Postgres client with connection string.
    * 
    * @param {string} connectionUri 
    * @throws
@@ -76,7 +79,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Authenticate Postgres client connection
+   * Authenticate Postgres client connection.
    * @throws 
    */
   async authenticateConnection() {
@@ -86,15 +89,17 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       this.twoFactorUserRepository = this.client.getRepository(TwoFactorUser);
 
     } catch (error) {
-      this.errorAdapter.throwStorageConnectionError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwStorageConnectionError(error);
+      }
     }
   }
 
   /**
-   * Add new user to the database
+   * Add new user to the database.
    * 
    * @param {RegistrationData} payload 
-   * @return {Promise<AuthenticableUser>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws
    */
   async register(payload: RegistrationData): Promise<AuthenticableUser | void> {
@@ -116,17 +121,21 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("User already exists");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwRegistrationError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwRegistrationError(error);
+      }
     }
   }
 
   /**
-   * Login user
+   * Login user.
    * 
    * @param {LoginData} payload 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws
    */
   async login(payload: LoginData): Promise<AuthenticableUser | void> {
@@ -144,17 +153,21 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("Wrong email or password");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwLoginError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwLoginError(error);
+      }
     }
   }
 
   /**
-   * Fetch user from the database by email
+   * Fetch user from the database by email.
    * 
    * @param {string} email 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws 
    */
   async getUserByEmail(email: string): Promise<AuthenticableUser | void> {
@@ -166,17 +179,21 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given email");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) {
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
   }
 
   /**
-   * Fetch user from the database by id
+   * Fetch user from the database by id.
    * 
    * @param {string} id 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    * @throws Login Error
    */
   async getUserById(id: string): Promise<AuthenticableUser | void> {
@@ -186,17 +203,21 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given ID");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
   }
 
   /**
-   * Fetch user from the database by username
+   * Fetch user from the database by username.
    * 
    * @param {string} username 
-   * @return {Promise<User>}
+   * @return {Promise<AuthenticableUser | void>}
    */
   async getUserByUsername(username: string): Promise<AuthenticableUser | void> {
     try {
@@ -208,17 +229,21 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given username");
       }
 
-      return user as AuthenticableUser;
+      const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
   }
 
   /**
-   * Register two-factor user
+   * Register two-factor user.
    * 
    * @param {TwoFactorRegistrationData} twoFactorUser 
-   * @return {Promise<AuthenticableTwoFactorUser>}
+   * @return {Promise<AuthenticableTwoFactorUser | void>}
    * @throws
    */
   async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser | void> {
@@ -236,9 +261,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("Two factor user already exists");
       }
 
-      return user as AuthenticableTwoFactorUser;
+      const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwTwoFactorRegistrationError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwTwoFactorRegistrationError(error);
+      }
     }
   }
 
@@ -246,7 +275,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * Fetch two-factor user from the database by email.
    * 
    * @param {string} email 
-   * @return {Promise<TwoFactorUser>}
+   * @return {Promise<AuthenticableTwoFactorUser | void>}
    */
   async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser | void> {
     try {
@@ -258,9 +287,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         throw new Error("No user found with the given email");
       }
 
-      return user as AuthenticableTwoFactorUser;
+      const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
+
+      return authUser;
     } catch (error) {
-      this.errorAdapter.throwTwoFactorProviderError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwTwoFactorProviderError(error);
+      }
     }
   }
 
@@ -270,6 +303,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @param {string} email 
    * @param {string} oldPassword 
    * @param {string} newPassword 
+   * @return {Promise<void>}
    */
   async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
     try {
@@ -292,8 +326,45 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         { where: { email: email } }
       );
     } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+      if (error instanceof Error) { 
+        this.errorAdapter.throwStorageAdapterError(error);
+      }
     }
+  }
+
+  /**
+   * Convert a class User object to object of type AuthenticableUser.
+   * 
+   * @param {User} user 
+   * @return {AuthenticableUser}
+   */
+  convertUserToAuthenticableUser(user: User): AuthenticableUser {
+    const authUser: AuthenticableUser = {
+      id: user.id,
+      username: user.username,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email
+    }
+
+    return authUser;
+  }
+
+  /**
+   * Convert a class TwoFactorUser object to object of type AuthenticableTwoFactorUser.
+   * 
+   * @param {TwoFactorUser} user 
+   * @return {AuthenticableTwoFactorUser}
+   */
+  convertTwoFactorUserToAuthenticableTwoFactorUser(user: TwoFactorUser): AuthenticableTwoFactorUser {
+    const authUser: AuthenticableTwoFactorUser = {
+      id: user.id,
+      email: user.email,
+      provider: user.provider,
+      secret: user.secret
+    }
+
+    return authUser;
   }
 }
 

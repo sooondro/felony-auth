@@ -24,7 +24,7 @@ export default class RedisSession implements SessionInterface {
    * 
    * @return {string}
    */
-  public get id() {
+  public get id(): string {
     return this._id;
   }
 

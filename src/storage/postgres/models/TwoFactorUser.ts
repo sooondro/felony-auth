@@ -11,25 +11,17 @@ export default class TwoFactorUser extends Model<TwoFactorUserInterface> {
    * Two-factor user email.
    */
   @Column
-  email: string;
+  email!: string;
 
   /**
    * Two-factor provider.
    */
   @Column
-  provider: string;
+  provider!: string;
 
   /**
    * Two-factor secret.
    */
   @Column
-  secret: string;
+  secret!: string;
 }
-
-
-// CREATE TABLE "TwoFactorUsers" (
-//   id SERIAL PRIMARY KEY,
-//   email VARCHAR(256) NOT NULL,
-//   provider VARCHAR(256) NOT NULL,
-//   secret VARCHAR(256) NOT NULL
-// );

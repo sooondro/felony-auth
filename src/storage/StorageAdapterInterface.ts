@@ -60,6 +60,7 @@ export default interface StorageAdapterInterface {
     : Promise<AuthenticableTwoFactorUser | void>;
 
   /**
+   * Change user's password.
    * 
    * @param {string} email 
    * @param {string} oldPassword 

@@ -10,8 +10,8 @@ import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 
 export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface {
 
-  private _storageAdapter: StorageAdapterInterface;
-  private _errorAdapter: ErrorAdapterInterface;
+  private _storageAdapter!: StorageAdapterInterface;
+  private _errorAdapter!: ErrorAdapterInterface;
 
   public get storageAdapter() {
     return this._storageAdapter;
