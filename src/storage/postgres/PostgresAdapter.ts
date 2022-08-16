@@ -8,8 +8,11 @@ import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 import AuthenticableUser from "../../types/AuthenticableUser";
 import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 
-import User from "./models/User";
-import TwoFactorUser from "./models/TwoFactorUser";
+// import User from "./models/User";
+// import TwoFactorUser from "./models/TwoFactorUser";
+
+import db from "./db/models";
+// import from "./db/models/user";
 
 import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import StorageAdapterInterface from "../StorageAdapterInterface";
@@ -52,7 +55,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         dialect: 'postgres',
         username: config.username,
         password: config.password,
-        models: [User, TwoFactorUser],
+        models: [db.User, db.TwoFactorUser],
         repositoryMode: true,
       },
     );
@@ -70,7 +73,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     this.client = new Sequelize(
       connectionUri,
       {
-        models: [User, TwoFactorUser],
+        models: [db.User, db.TwoFactorUser],
         repositoryMode: true,
       }
     );
@@ -85,8 +88,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   async authenticateConnection() {
     try {
       await this.client.authenticate();
-      this.userRepository = this.client.getRepository(User);
-      this.twoFactorUserRepository = this.client.getRepository(TwoFactorUser);
+      this.userRepository = this.client.getRepository(db.User);
+      this.twoFactorUserRepository = this.client.getRepository(db.TwoFactorUser);
 
     } catch (error) {
       if (error instanceof Error) {

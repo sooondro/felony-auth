@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = {
-  async up (queryInterface, Sequelize) {
+  async up(queryInterface: any, Sequelize: any) {
     await queryInterface.bulkInsert(
       'two_factor_user',
       [
@@ -26,7 +26,7 @@ module.exports = {
     );
   },
 
-  async down (queryInterface, Sequelize) {
+  async down(queryInterface: any, Sequelize: any) {
     await queryInterface.bulkDelete('two_factor_user', null, {});
   }
 };

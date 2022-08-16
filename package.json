@@ -4,6 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "make-user-model": "npx sequelize-cli model:generate --name user --attributes username:string,first_name:string,last_name:string,email:string,password:string",
+    "make-two-factor-user-model": "npx sequelize-cli model:generate --name two_factor_user --attributes secret:string,provider:string",
+    "migrate": "npx sequelize-cli db:migrate",
+    "migrate-down": "npx sequelize-cli db:migrate:undo",
+    "migrate-down-all": "npx sequelize-cli db:migrate:undo:all",
+    "make-seed-demo-user": "npx sequelize-cli seed:generate --name demo-user",
+    "make-seed-demo-two-factor-user": "npx sequelize-cli seed:generate --name demo-two-factor-user",
+    "seed": "npx sequelize-cli db:seed:all",
+    "unseed": "npx sequelize-cli db:seed:undo",
+    "unseed-all": "npx sequelize-cli db:seed:undo:all",
     "test": "mocha --require ts-node/register src/test/**/*.test.ts"
   },
   "author": "",
@@ -13,6 +23,7 @@
     "@types/uuid": "^8.3.4",
     "bcrypt": "^5.0.1",
     "crypto-ts": "^1.0.2",
+    "dotenv": "^16.0.1",
     "mongoose": "^6.4.3",
     "otplib": "^12.0.1",
     "pg": "^8.7.3",
@@ -37,6 +48,7 @@
     "chai": "^4.3.6",
     "eslint": "^8.19.0",
     "mocha": "^10.0.0",
+    "sequelize-cli": "^6.4.1",
     "sinon": "^14.0.0",
     "ts-node": "^10.9.1",
     "typescript": "^4.7.4"
