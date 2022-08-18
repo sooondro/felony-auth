@@ -2,29 +2,13 @@ import { authenticator } from "otplib";
 import QRCode from "qrcode";
 
 import TwoFactorProviderInterface from "./TwoFactorProviderInterface";
-import StorageAdapterInterface from "../../storage/StorageAdapterInterface";
-import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
-import TwoFactorAuthenticationData from "../../types/TwoFactorAuthenticationData";
 import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
+import AuthenticableUser from "../../types/AuthenticableUser";
+import Authentication from "../../Authentication";
 
 export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface {
-
-  private _storageAdapter!: StorageAdapterInterface;
-  private _errorAdapter!: ErrorAdapterInterface;
-
-  public get storageAdapter() {
-    return this._storageAdapter;
-  }
-  public set storageAdapter(storageAdapter: StorageAdapterInterface) {
-    this._storageAdapter = storageAdapter;
-  }
-  public get errorAdapter() {
-    return this._errorAdapter;
-  }
-  public set errorAdapter(errorAdapter: ErrorAdapterInterface) {
-    this._errorAdapter = errorAdapter;
-  }
+  private authentication!: Authentication;
 
   /**
    * Type of 2FA
@@ -32,41 +16,54 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
   provider = "TOTP";
 
   /**
+   * Used for injecting Authentication class into the adapter.
+   * 
+   * @param {Authentication} authentication 
+   */
+  initialize(authentication: Authentication): void {
+    this.authentication = authentication;
+  }
+
+  /**
    * Verifies the given code with the secret stored in the database.
    * 
-   * @param {TwoFactorAuthenticationData} userData 
+   * @param {TwoFactorAuthenticationData} user
+   * @param {string} code 
    * @returns 
    */
-  async verify(userData: TwoFactorAuthenticationData): Promise<AuthenticableTwoFactorUser | void> {
-    const user = await this._storageAdapter.getTwoFactorUserByEmail(userData.email);
-
-    if (user) {
-      if (!authenticator.check(userData.code, user.secret)) {
-        this._errorAdapter.throwTwoFactorVerificationError(new Error("Verification failed. Invalid code or email sent."));
-      }
-      return user;
+  async verify(user: AuthenticableTwoFactorUser, code: string): Promise<AuthenticableTwoFactorUser> {
+    if (!authenticator.check(code, user.secret)) {
+      throw "Verification failed. Invalid 2FA code.";
     }
+
+    return user;
   }
 
   /**
    * Registers a new user 2FA user. Generates a secret for the new user and saves it in the database.
    * 
-   * @param {string} email 
+   * @param {AuthenticableUser} user 
    * @returns 
    */
-  async register(email: string): Promise<string | void> {
+  async register(user: AuthenticableUser): Promise<TwoFactorRegistrationData> {
     const secret = authenticator.generateSecret();
 
     const userData: TwoFactorRegistrationData = {
-      email,
+      userId: user.id,
       secret: secret,
       provider: this.provider,
     };
 
-    const user = await this._storageAdapter.registerTwoFactorUser(userData);
+    return userData;
+  }
 
-    if (user) {
-      return await QRCode.toDataURL(authenticator.keyuri(email, '2FA Felony', user.secret));
-    }
+  /**
+   * Generates QR code base on AuthenticableTwoFactorUser object
+   * 
+   * @param {AuthenticableTwoFactorUser} user 
+   * @returns 
+   */
+  async generateQRCode(user: AuthenticableTwoFactorUser): Promise<string> {
+    return await QRCode.toDataURL(authenticator.keyuri(user.userId, '2FA Felony', user.secret));
   }
 }

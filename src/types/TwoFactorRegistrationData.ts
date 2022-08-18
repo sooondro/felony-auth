@@ -3,9 +3,9 @@
  */
 type TwoFactorRegistrationData = {
   /**
-   * User's email.
+   * User's id.
    */
-  email: string,
+  userId: string,
 
   /**
    * User's session CSRF secret.

@@ -1,9 +1,30 @@
+import Authentication from "../Authentication";
+
 /**
  * Error adapter interface.
  * 
  * @type {Interface}
  */
 export default interface ErrorAdapterInterface {
+  /**
+   * Used for injecting Authentication class into the adapter.
+   * 
+   * @param {Authentication} authentication 
+   */
+  initialize(authentication: Authentication): void;
+  
+  /**
+   * 
+   * @param error 
+   */
+  registration(error: Error | string | object): never;
+
+  /**
+   * 
+   * @param error 
+   */
+  login(error: Error | string | object): never;
+
   /**
    * Throw login validation error.
    * 

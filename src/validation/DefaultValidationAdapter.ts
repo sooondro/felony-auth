@@ -1,10 +1,10 @@
-import ErrorAdapterInterface from "../error/ErrorAdapterInterface";
 import ValidationAdapterInterface from "./ValidationAdapterInterface";
 
 import RegistrationData from "../types/RegistrationData";
 import LoginData from "../types/LoginData";
 
 import Validator from 'validator';
+import Authentication from "../Authentication";
 
 /**
  * Default validation adapter implementation.
@@ -12,8 +12,16 @@ import Validator from 'validator';
  * @type {Class}
  */
 export default class DefaultValidationAdapter implements ValidationAdapterInterface {
-
-  constructor(private errorAdapter: ErrorAdapterInterface){}
+  private authentication!: Authentication;
+  
+  /**
+   * Used for injecting Authentication class into the adapter
+   * 
+   * @param {Authentication} authentication 
+   */
+  initialize(authentication: Authentication): void {
+    this.authentication = authentication;
+  }
 
   /**
    * Validate registration data.
@@ -23,11 +31,11 @@ export default class DefaultValidationAdapter implements ValidationAdapterInterf
    */
   registration(payload: RegistrationData): void {
     if(!Validator.isEmail(payload.email)) {
-      this.errorAdapter.throwRegistrationValidationError(new Error("Invalid email"));
+      throw "Invalid email";
     }
 
     if(!Validator.isLength(payload.password, {min: 6})) {
-      this.errorAdapter.throwRegistrationValidationError(new Error("Password needs to be at least 6 characters long"));
+      throw "Password needs to be at least 6 characters long";
     }
   }
 
@@ -39,11 +47,11 @@ export default class DefaultValidationAdapter implements ValidationAdapterInterf
    */
   login(payload: LoginData): void {
     if (!Validator.isEmail(payload.email)) {
-      this.errorAdapter.throwLoginValidationError(new Error("Invalid email"));
+      throw "Invalid email";
     }
 
     if (!Validator.isLength(payload.password, { min: 6 })) {
-      this.errorAdapter.throwLoginValidationError(new Error("Password needs to be at least 6 characters long"));
+      throw "Password needs to be at least 6 characters long";
     }
   }
 }

@@ -1,4 +1,4 @@
-import { Sequelize, Repository } from 'sequelize-typescript';
+import { Sequelize } from 'sequelize-typescript';
 import Bcrypt from 'bcrypt';
 
 import RegistrationData from "../../types/RegistrationData";
@@ -16,7 +16,7 @@ import db from "./db/models";
 
 import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import StorageAdapterInterface from "../StorageAdapterInterface";
-
+import Authentication from '../../Authentication';
 
 /**
  * Storage adapter for the Postgres database
@@ -24,9 +24,8 @@ import StorageAdapterInterface from "../StorageAdapterInterface";
 export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client!: Sequelize;
-  // private userRepository!: Repository<User>;
-  // private twoFactorUserRepository!: Repository<TwoFactorUser>;
   private errorAdapter: ErrorAdapterInterface;
+  private authentication!: Authentication; //pitanje ? ili !
 
   constructor(
     errorAdapter: ErrorAdapterInterface,
@@ -38,6 +37,15 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     this.setupPostgresConnectionWithUri(connectionUri)
     // if (config) this.setupPostgresConnectionWithConfig(config);
     // else this.setupPostgresConnectionWithUri(connectionUri)
+  }
+
+  /**
+   * Used for injecting Authentication class into the adapter.
+   * 
+   * @param {Authentication} authentication 
+   */
+  initialize(authentication: Authentication): void {
+    this.authentication = authentication;
   }
 
   /**
@@ -88,9 +96,6 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   async authenticateConnection() {
     try {
       await this.client.authenticate();
-      // this.userRepository = this.client.getRepository(db.User);
-      // this.twoFactorUserRepository = this.client.getRepository(db.TwoFactorUser);
-
     } catch (error) {
       if (error instanceof Error) {
         this.errorAdapter.throwStorageConnectionError(error);
@@ -102,247 +107,181 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * Add new user to the database.
    * 
    * @param {RegistrationData} payload 
-   * @return {Promise<AuthenticableUser | void>}
+   * @return {Promise<AuthenticableUser>}
    * @throws
    */
-  async register(payload: RegistrationData): Promise<AuthenticableUser | void> {
-    try {
-      const hashedPassword = await Bcrypt.hash(payload.password, 12);
+  async register(payload: RegistrationData): Promise<AuthenticableUser> {
+    const hashedPassword = await Bcrypt.hash(payload.password, 12);
 
-      // const [user, created] = await this.userRepository.findOrCreate({
-      //   where: { email: payload.email },
-      //   defaults: {
-      //     username: payload.username,
-      //     firstName: payload.firstName,
-      //     lastName: payload.lastName,
-      //     email: payload.email,
-      //     password: hashedPassword,
-      //   }
-      // });
-      const [user, created] = await db.User.findOrCreate({
-        where: { email: payload.email },
-        defaults: {
-          username: payload.username,
-          firstName: payload.firstName,
-          lastName: payload.lastName,
-          email: payload.email,
-          password: hashedPassword,
-        }
-      });
-
-      if (!created) {
-        throw new Error("User already exists");
+    const [user, created] = await db.User.findOrCreate({
+      where: { email: payload.email },
+      defaults: {
+        username: payload.username,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+        password: hashedPassword,
       }
+    });
 
-      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
-      const authUser: AuthenticableUser = user;
-
-      return authUser;
-    } catch (error) {
-      if (error instanceof Error) {
-        this.errorAdapter.throwRegistrationError(error);
-      }
+    if (!created) {
+      throw "User already exists";
     }
-  }
 
-  /**
-   * Login user.
-   * 
-   * @param {LoginData} payload 
-   * @return {Promise<AuthenticableUser | void>}
-   * @throws
-   */
-  async login(payload: LoginData): Promise<AuthenticableUser | void> {
-    try {
-      // const user = await this.userRepository.findOne({
-      //   where: { email: payload.email }
-      // });
-      const user = await db.User.findOne({
-        where: { email: payload.email }
-      });
+    const authUser: AuthenticableUser = user;
 
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
-
-      const result = await Bcrypt.compare(payload.password, user.password);
-      if (!result) {
-        throw new Error("Wrong email or password");
-      }
-
-      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
-      const authUser: AuthenticableUser = user;
-
-      return authUser;
-    } catch (error) {
-      if (error instanceof Error) {
-        this.errorAdapter.throwLoginError(error);
-      }
-    }
-  }
-
-  /**
-   * Fetch user from the database by email.
-   * 
-   * @param {string} email 
-   * @return {Promise<AuthenticableUser | void>}
-   * @throws 
-   */
-  async getUserByEmail(email: string): Promise<AuthenticableUser | void> {
-    try {
-      // const user = await this.userRepository.findOne({
-      //   where: { email: email }
-      // });
-      
-      const user = await db.User.findOne({
-        where: { email: email }
-      });
-
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
-
-      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
-      const authUser: AuthenticableUser = user;
-
-
-      return authUser;
-    } catch (error) {
-      if (error instanceof Error) {
-        this.errorAdapter.throwStorageAdapterError(error);
-      }
-    }
-  }
-
-  /**
-   * Fetch user from the database by id.
-   * 
-   * @param {string} id 
-   * @return {Promise<AuthenticableUser | void>}
-   * @throws Login Error
-   */
-  async getUserById(id: string): Promise<AuthenticableUser | void> {
-    try {
-      // const user = await this.userRepository.findByPk(id);
-      const user = await db.User.findByPk(id);
-
-      if (!user) {
-        throw new Error("No user found with the given ID");
-      }
-
-      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
-      const authUser: AuthenticableUser = user;
-
-
-      return authUser;
-    } catch (error) {
-      if (error instanceof Error) { 
-        this.errorAdapter.throwStorageAdapterError(error);
-      }
-    }
-  }
-
-  /**
-   * Fetch user from the database by username.
-   * 
-   * @param {string} username 
-   * @return {Promise<AuthenticableUser | void>}
-   */
-  async getUserByUsername(username: string): Promise<AuthenticableUser | void> {
-    try {
-      // const user = await this.userRepository.findOne({
-      //   where: { username: username }
-      // });
-      const user = await db.User.findOne({
-        where: { username: username }
-      });
-
-      if (!user) {
-        throw new Error("No user found with the given username");
-      }
-
-      // const authUser: AuthenticableUser = this.convertUserToAuthenticableUser(user);
-      const authUser: AuthenticableUser = user;
-
-
-      return authUser;
-    } catch (error) {
-      if (error instanceof Error) { 
-        this.errorAdapter.throwStorageAdapterError(error);
-      }
-    }
+    return authUser;
   }
 
   /**
    * Register two-factor user.
    * 
    * @param {TwoFactorRegistrationData} twoFactorUser 
-   * @return {Promise<AuthenticableTwoFactorUser | void>}
+   * @return {Promise<AuthenticableTwoFactorUser>}
    * @throws
    */
-  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser | void> {
-    try {
-      // const [user, created] = await this.twoFactorUserRepository.findOrCreate({
-      //   where: { email: twoFactorUser.email },
-      //   defaults: {
-      //     email: twoFactorUser.email,
-      //     provider: twoFactorUser.provider,
-      //     secret: twoFactorUser.secret,
-      //   }
-      // });
-      const [user, created] = await db.TwoFactorUser.findOrCreate({
-        where: { email: twoFactorUser.email },
-        defaults: {
-          email: twoFactorUser.email,
-          provider: twoFactorUser.provider,
-          secret: twoFactorUser.secret,
-        }
-      });
-
-      if (!created) {
-        throw new Error("Two factor user already exists");
+  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser> {
+    const [user, created] = await db.TwoFactorUser.findOrCreate({
+      where: { userId: twoFactorUser.userId },
+      defaults: {
+        userId: twoFactorUser.userId,
+        provider: twoFactorUser.provider,
+        secret: twoFactorUser.secret,
       }
+    });
 
-      // const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
-      const authUser: AuthenticableTwoFactorUser = user;
-
-
-      return authUser;
-    } catch (error) {
-      if (error instanceof Error) { 
-        this.errorAdapter.throwTwoFactorRegistrationError(error);
-      }
+    if (!created) {
+      throw "Two factor user already exists";
     }
+
+    const authUser: AuthenticableTwoFactorUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Login user.
+   * 
+   * @param {LoginData} payload 
+   * @return {Promise<AuthenticableUser>}
+   * @throws
+   */
+  async login(payload: LoginData): Promise<AuthenticableUser> {
+    const user = await db.User.findOne({
+      where: { email: payload.email }
+    });
+
+    if (!user) {
+      throw "No user found with the given email";
+    }
+
+    const result = await Bcrypt.compare(payload.password, user.password);
+
+    if (!result) {
+      throw "Wrong email or password";
+    }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Fetch user from the database by email.
+   * 
+   * @param {string} email 
+   * @return {Promise<AuthenticableUser>}
+   * @throws 
+   */
+  async getUserByEmail(email: string): Promise<AuthenticableUser> {
+    const user = await db.User.findOne({
+      where: { email: email }
+    });
+
+    if (!user) {
+      throw "No user found with the given email";
+    }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Fetch user from the database by id.
+   * 
+   * @param {string} id 
+   * @return {Promise<AuthenticableUser>}
+   * @throws Login Error
+   */
+  async getUserById(id: string): Promise<AuthenticableUser> {
+    const user = await db.User.findByPk(id);
+
+    if (!user) {
+      throw "No user found with the given ID";
+    }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Fetch user from the database by username.
+   * 
+   * @param {string} username 
+   * @return {Promise<AuthenticableUser>}
+   */
+  async getUserByUsername(username: string): Promise<AuthenticableUser> {
+    const user = await db.User.findOne({
+      where: { username: username }
+    });
+
+    if (!user) {
+      throw "No user found with the given username";
+    }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Fetch two-factor user by AuthenticableUser object
+   * 
+   * @param {AuthenticableUser} user 
+   * @return {AuthenticableTwoFactorUser}
+   */
+  async getTwoFactorUser(user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
+    const twoFactorUser = await db.TwoFactorUser.findOne({
+      where: { userId: user.id }
+    });
+
+    if (!twoFactorUser) {
+      throw "No two-factor user found for the given authenticable user";
+    }
+
+    return twoFactorUser;
   }
 
   /**
    * Fetch two-factor user from the database by email.
    * 
    * @param {string} email 
-   * @return {Promise<AuthenticableTwoFactorUser | void>}
+   * @return {Promise<AuthenticableTwoFactorUser>}
    */
-  async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser | void> {
-    try {
-      // const user = await this.twoFactorUserRepository.findOne({
-      //   where: { email: email }
-      // });
-      const user = await db.TwoFactorUser.findOne({
-        where: { email: email }
-      });
+  async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
+    const user = await db.TwoFactorUser.findOne({
+      where: { email: email }
+    });
 
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
-
-      // const authUser: AuthenticableTwoFactorUser = this.convertTwoFactorUserToAuthenticableTwoFactorUser(user);
-      const authUser: AuthenticableTwoFactorUser = user;
-
-      return authUser;
-    } catch (error) {
-      if (error instanceof Error) { 
-        this.errorAdapter.throwTwoFactorProviderError(error);
-      }
+    if (!user) {
+      throw "No user found with the given email";
     }
+
+    const authUser: AuthenticableTwoFactorUser = user;
+
+    return authUser;
   }
 
   /**
@@ -354,38 +293,25 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<void>}
    */
   async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
-    try {
-      // const user = await this.userRepository.findOne({
-      //   where: { email: email }
-      // });
-      const user = await db.User.findOne({
-        where: { email: email }
-      });
+    const user = await db.User.findOne({
+      where: { email: email }
+    });
 
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
-
-      const result = await Bcrypt.compare(oldPassword, user.password);
-      if (!result) {
-        throw new Error("Wrong email or password");
-      }
-
-      const newHashedPassword = await Bcrypt.hash(newPassword, 12);
-
-      // await this.userRepository.update(
-      //   { password: newHashedPassword },
-      //   { where: { email: email } }
-      // );
-      await db.User.update(
-        { password: newHashedPassword },
-        { where: { email: email } }
-      );
-    } catch (error) {
-      if (error instanceof Error) { 
-        this.errorAdapter.throwStorageAdapterError(error);
-      }
+    if (!user) {
+      throw "No user found with the given email";
     }
+
+    const result = await Bcrypt.compare(oldPassword, user.password);
+    if (!result) {
+      throw "Wrong email or password";
+    }
+
+    const newHashedPassword = await Bcrypt.hash(newPassword, 12);
+
+    await db.User.update(
+      { password: newHashedPassword },
+      { where: { email: email } }
+    );
   }
 
   // /**

@@ -1,3 +1,4 @@
+import Authentication from '../Authentication';
 import AuthenticableUser from '../types/AuthenticableUser';
 import Session from '../types/Session';
 
@@ -7,6 +8,13 @@ import Session from '../types/Session';
  * @type {Interface}
  */
 export default interface CacheAdapterInterface {
+	/**
+	 * Used for injecting Authentication class into the adapter.
+	 * 
+	 * @param {Authentication} authentication 
+	 */
+	initialize(authentication: Authentication): void;
+
 	/**
 	 * Create session.
 	 * 

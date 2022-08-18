@@ -1,3 +1,4 @@
+import Authentication from "../Authentication";
 import ErrorAdapterInterface from "./ErrorAdapterInterface";
 
 /**
@@ -6,7 +7,35 @@ import ErrorAdapterInterface from "./ErrorAdapterInterface";
  * @type {Class}
  */
 export default class DefaultErrorAdapter implements ErrorAdapterInterface {
+  private authentication!: Authentication;
   
+  /**
+   * Used for injecting Authentication class into the adapter.
+   * 
+   * @param {Authentication} authentication 
+   */
+  initialize(authentication: Authentication): void {
+    this.authentication = authentication;
+  }
+  
+  /**
+   * Handler for registration errors.
+   * 
+   * @param {string | object | Error} error 
+   */
+  registration(error: string | object | Error): never {
+    throw new Error("Method not implemented.");
+  }
+  
+  /**
+   * Handler for login errors.
+   * 
+   * @param error 
+   */
+  login(error: string | object | Error): never {
+    throw new Error("Method not implemented.");
+  }
+
   /**
    * Throw session adapter error.
    * 

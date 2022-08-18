@@ -1,5 +1,8 @@
+import Authentication from "../../Authentication";
 import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
+import AuthenticableUser from "../../types/AuthenticableUser";
 import TwoFactorAuthenticationData from "../../types/TwoFactorAuthenticationData";
+import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 
 /**
  * Interface for the 2FA provider
@@ -11,16 +14,31 @@ export default interface TwoFactorProviderInterface {
 	provider: string,
 
 	/**
+	 * Used for injecting Authentication class into the adapter.
+	 * 
+	 * @param {Authentication} authentication 
+	 */
+	initialize(authentication: Authentication): void;
+	
+	/**
 	 * Verifies the 2FA data e.g. if the one time password (TOTP) is valid.
 	 * 
-	 * @param {TwoFactorAuthenticationData} userData 
+	 * @param {AuthenticableTwoFactorUser} user
+	 * @param {string} code
 	 */
-	verify(userData: TwoFactorAuthenticationData): Promise<AuthenticableTwoFactorUser | void>;
+	verify(user: AuthenticableTwoFactorUser, code: string): Promise<AuthenticableTwoFactorUser>
 
 	/**
 	 * Register a new 2FA user and save it in the database. Returns a QR code. 
 	 * 
-	 * @param {string} email 
+	 * @param {AuthenticableUser} user 
 	 */
-	register(email: string): Promise<string | void>;
+	register(user: AuthenticableUser): Promise<TwoFactorRegistrationData>;
+
+	/**
+	 * Generates QR code based on two-factor registration data.
+	 * 
+	 * @param {AuthenticableTwoFactorUser} user 
+	 */
+	generateQRCode(user: AuthenticableTwoFactorUser): Promise<string>;
 }
