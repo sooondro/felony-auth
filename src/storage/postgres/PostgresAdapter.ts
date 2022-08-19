@@ -14,9 +14,9 @@ import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 import db from "./db/models";
 // import from "./db/models/user";
 
-import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
 import StorageAdapterInterface from "../StorageAdapterInterface";
 import Authentication from '../../Authentication';
+import { ValidationErrors } from '../../error/ValidationError';
 
 /**
  * Storage adapter for the Postgres database
@@ -24,20 +24,20 @@ import Authentication from '../../Authentication';
 export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client!: Sequelize;
-  private errorAdapter: ErrorAdapterInterface;
   private authentication!: Authentication; //pitanje ? ili !
 
-  constructor(
-    errorAdapter: ErrorAdapterInterface,
-    connectionUri: string,
-    // config?: PostgresConnectionData,
-  ) {
-    this.errorAdapter = errorAdapter;
-
-    this.setupPostgresConnectionWithUri(connectionUri)
-    // if (config) this.setupPostgresConnectionWithConfig(config);
-    // else this.setupPostgresConnectionWithUri(connectionUri)
-  }
+  // constructor( // PITANJE izbacio, postavlja se pomocu metoda
+  //   config: {
+  //     connectionUri?: string,
+  //     connectionData?: PostgresConnectionData
+  //   }
+  // ) {
+  //   if (config.connectionUri) {
+  //     this.setupPostgresConnectionWithConnectionUri(config.connectionUri)
+  //   } else if (config.connectionData) {
+  //     this.setupPostgresConnectionWithConnectionData(config.connectionData);
+  //   }
+  // }
 
   /**
    * Used for injecting Authentication class into the adapter.
@@ -54,17 +54,16 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @param {PostgresConnectionData} config 
    * @throws
    */
-  async setupPostgresConnectionWithConfig(config: PostgresConnectionData) {
+  async setupPostgresConnectionWithConnectionData(config: PostgresConnectionData) {
     this.client = new Sequelize(
       {
-        host: 'localhost',
+        host: config.host,
         port: config.port,
         database: config.database,
         dialect: 'postgres',
         username: config.username,
         password: config.password,
         models: [db.User, db.TwoFactorUser],
-        repositoryMode: true,
       },
     );
 
@@ -77,12 +76,11 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @param {string} connectionUri 
    * @throws
    */
-  async setupPostgresConnectionWithUri(connectionUri: string) {
+  async setupPostgresConnectionWithConnectionUri(connectionUri: string) {
     this.client = new Sequelize(
       connectionUri,
       {
         models: [db.User, db.TwoFactorUser],
-        repositoryMode: true,
       }
     );
 
@@ -94,13 +92,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws 
    */
   async authenticateConnection() {
-    try {
-      await this.client.authenticate();
-    } catch (error) {
-      if (error instanceof Error) {
-        this.errorAdapter.throwStorageConnectionError(error);
-      }
-    }
+    await this.client.authenticate();
   }
 
   /**
@@ -125,7 +117,9 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!created) {
-      throw "User already exists";
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
 
     const authUser: AuthenticableUser = user;
@@ -151,7 +145,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!created) {
-      throw "Two factor user already exists";
+      // const error = new ValidationError("email");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
 
     const authUser: AuthenticableTwoFactorUser = user;
@@ -172,13 +171,18 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!user) {
-      throw "No user found with the given email";
+      // const error = new ValidationError("email");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
 
     const result = await Bcrypt.compare(payload.password, user.password);
 
     if (!result) {
-      throw "Wrong email or password";
+      throw "Invalid credentials!";
     }
 
     const authUser: AuthenticableUser = user;
@@ -199,7 +203,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!user) {
-      throw "No user found with the given email";
+      // const error = new ValidationError("email");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
 
     const authUser: AuthenticableUser = user;
@@ -218,7 +227,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     const user = await db.User.findByPk(id);
 
     if (!user) {
-      throw "No user found with the given ID";
+      // const error = new ValidationError("id");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("id", "invalid credentials");
+      throw validationErrors;
     }
 
     const authUser: AuthenticableUser = user;
@@ -238,7 +252,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!user) {
-      throw "No user found with the given username";
+      // const error = new ValidationError("username");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("username", "invalid credentials");
+      throw validationErrors;
     }
 
     const authUser: AuthenticableUser = user;
@@ -258,7 +277,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!twoFactorUser) {
-      throw "No two-factor user found for the given authenticable user";
+      // const error = new ValidationError("id");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("id", "invalid credentials");
+      throw validationErrors;
     }
 
     return twoFactorUser;
@@ -276,7 +300,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!user) {
-      throw "No user found with the given email";
+      // const error = new ValidationError("email");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
 
     const authUser: AuthenticableTwoFactorUser = user;
@@ -298,12 +327,18 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     });
 
     if (!user) {
-      throw "No user found with the given email";
+      // const error = new ValidationError("email");
+      // error.addErrorMessage("Invalid credentials!");
+      // throw error;
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
 
     const result = await Bcrypt.compare(oldPassword, user.password);
+
     if (!result) {
-      throw "Wrong email or password";
+      throw "Invalid credentials!";
     }
 
     const newHashedPassword = await Bcrypt.hash(newPassword, 12);

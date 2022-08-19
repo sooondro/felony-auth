@@ -1,26 +1,20 @@
 import { createClient } from "redis";
-
-import RedisSession from "./RedisSession";
+import { RedisClientType } from "@redis/client";
 
 import CacheAdapterInterface from "../CacheAdapterInterface";
+import Authentication from "../../Authentication";
+import RedisSession from "./RedisSession";
 import AuthenticableUser from "../../types/AuthenticableUser";
 import Session from "../../types/Session";
-import Authentication from "../../Authentication";
 
 /**
  * Redis adapter.
  */
 export default class RedisAdapter implements CacheAdapterInterface {
 
-	constructor(url: string) {
-		this.client = createClient({
-			url,
-		});
+	constructor(private url: string) { }
 
-		this.client.connect();
-	}
-
-	private client;
+	private client!: RedisClientType; // PITANJE
 	private authentication!: Authentication;
 
 	/**
@@ -30,6 +24,14 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	 */
 	initialize(authentication: Authentication): void {
 		this.authentication = authentication;
+	}
+
+	createConnection() {
+		this.client = createClient({
+			url: this.url,
+		});
+
+		this.client.connect();
 	}
 
 	/**

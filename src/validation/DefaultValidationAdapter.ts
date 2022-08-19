@@ -1,10 +1,11 @@
+import Validator from 'validator';
+
 import ValidationAdapterInterface from "./ValidationAdapterInterface";
+import Authentication from "../Authentication";
 
 import RegistrationData from "../types/RegistrationData";
 import LoginData from "../types/LoginData";
-
-import Validator from 'validator';
-import Authentication from "../Authentication";
+import { ValidationErrors } from '../error/ValidationError';
 
 /**
  * Default validation adapter implementation.
@@ -13,7 +14,7 @@ import Authentication from "../Authentication";
  */
 export default class DefaultValidationAdapter implements ValidationAdapterInterface {
   private authentication!: Authentication;
-  
+
   /**
    * Used for injecting Authentication class into the adapter
    * 
@@ -30,12 +31,17 @@ export default class DefaultValidationAdapter implements ValidationAdapterInterf
    * @throws 
    */
   registration(payload: RegistrationData): void {
-    if(!Validator.isEmail(payload.email)) {
-      throw "Invalid email";
+    const validationErrors = new ValidationErrors();
+    if (!Validator.isEmail(payload.email)) {
+      validationErrors.addError("email", "email");
     }
 
-    if(!Validator.isLength(payload.password, {min: 6})) {
-      throw "Password needs to be at least 6 characters long";
+    if (!Validator.isLength(payload.password, { min: 6 })) {
+      validationErrors.addError("password", "min:6");
+    }
+
+    if (validationErrors.hasErrors()) {
+      throw validationErrors;
     }
   }
 
@@ -46,12 +52,17 @@ export default class DefaultValidationAdapter implements ValidationAdapterInterf
    * @throws
    */
   login(payload: LoginData): void {
+    const validationErrors = new ValidationErrors();
     if (!Validator.isEmail(payload.email)) {
-      throw "Invalid email";
+      validationErrors.addError("email", "email");
     }
 
     if (!Validator.isLength(payload.password, { min: 6 })) {
-      throw "Password needs to be at least 6 characters long";
+      validationErrors.addError("password", "min:6");
+    }
+
+    if (validationErrors.hasErrors()) {
+      throw validationErrors;
     }
   }
 }

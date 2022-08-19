@@ -7,9 +7,11 @@ import TwoFactorProviderInterface from "./providers/two-factor/TwoFactorProvider
 import RegistrationData from "./types/RegistrationData";
 import LoginData from "./types/LoginData";
 import Session from "./types/Session";
-import TwoFactorAuthenticationData from "./types/TwoFactorAuthenticationData";
 import AuthenticableUser from "./types/AuthenticableUser";
 import AuthenticableTwoFactorUser from "./types/AuthenticableTwoFactorUser";
+import ErrorData from "./types/ErrorData";
+import AuthenticationError from "./error/AuthenticationError";
+import { ValidationErrors } from "./error/ValidationError";
 
 export default class Authentication {
 
@@ -110,9 +112,9 @@ export default class Authentication {
 			}
 
 			return result;
-		} catch (error) {
-			// if (typeof error === "string" || typeof error === "object" || (error && error.stack && error.message))
-			throw this._errorAdapter.registration(error);
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -136,9 +138,9 @@ export default class Authentication {
 
 			const sessionId = await this._cacheAdapter.createSession(user);
 			return sessionId;
-
-		} catch (error) {
-			throw this._errorAdapter.login(error);
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -156,8 +158,9 @@ export default class Authentication {
 			const qrCode = await this._twoFactorProvider.generateQRCode(twoFactorUser);
 
 			return { twoFactorUser, qrCode };
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -172,8 +175,9 @@ export default class Authentication {
 			const session = await this._cacheAdapter.getSession(sessionId);
 
 			return await this.registerTwoFactorUser(session.user);
-		} catch (error) {
-			throw 
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -185,8 +189,9 @@ export default class Authentication {
 	async verifyTwoFactorUser(twoFactorUser: AuthenticableTwoFactorUser, code: string) {
 		try {
 			await this._twoFactorProvider.verify(twoFactorUser, code);
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -200,8 +205,9 @@ export default class Authentication {
 		try {
 			const twoFactorUser = await this._storageAdapter.getTwoFactorUser(user);
 			await this._twoFactorProvider.verify(twoFactorUser, code);
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -214,8 +220,9 @@ export default class Authentication {
 	async validateCSRFToken(sessionId: string, token: string): Promise<void> {
 		try {
 			this._cacheAdapter.validateCSRF(sessionId, token);
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -237,8 +244,9 @@ export default class Authentication {
 	async getSession(sessionId: string): Promise<Session> {
 		try {
 			return this._cacheAdapter.getSession(sessionId);
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
@@ -250,25 +258,28 @@ export default class Authentication {
 	async createSession(payload: AuthenticableUser): Promise<string> {
 		try {
 			return await this._cacheAdapter.createSession(payload);
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
-	
+
 	async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
 		try {
 			await this._storageAdapter.changePassword(email, oldPassword, newPassword);
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 
 	async getTwoFactorUser(user: AuthenticableUser) { //PITANJE koristit ovo ili direktno pozivat
 		try {
 			return await this._storageAdapter.getTwoFactorUser(user);
-		} catch (error) {
-			throw
+		} catch (error: any) {
+			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
+			throw this._errorAdapter.handleError(err);
 		}
 	}
 

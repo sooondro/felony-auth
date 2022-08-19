@@ -4,8 +4,8 @@ import { Model } from 'sequelize';
 interface UserAttributes {
   id: string;
   username: string;
-  firstName: string;
-  lastName: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   password: string;
   createdAt: Date;
@@ -51,12 +51,10 @@ module.exports = (sequelize: any, DataTypes: any) => {
       firstName: {
         type: DataTypes.STRING,
         field: 'first_name',
-        allowNull: false,
       },
       lastName: {
         type: DataTypes.STRING,
         field: 'last_name',
-        allowNull: false
       },
       email: {
         type: DataTypes.STRING,

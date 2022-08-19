@@ -16,8 +16,6 @@ import path, { join } from 'path';
 import { Sequelize, DataTypes } from 'sequelize';
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-// PITANJE
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const config = require(__dirname + '/../config/config.js')[env];
 const db: any = {};
 
@@ -33,8 +31,6 @@ fs.readdirSync(__dirname)
     return (file.indexOf('.') !== 0) && (file !== basename) && (file.slice(-3) === '.ts');
   })
   .forEach(file => {
-    // PITANJE
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const model = require(join(__dirname, file))(sequelize, DataTypes);
     db[model.name] = model;
   });
