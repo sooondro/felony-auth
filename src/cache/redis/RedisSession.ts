@@ -10,7 +10,7 @@ import AuthenticableUser from '../../types/AuthenticableUser';
  */
 export default class RedisSession implements SessionInterface {
   constructor(user: AuthenticableUser) {
-    this._id = uuidv4();
+    this._id = user.id;
     this._csrf = uuidv4();
     this._user = user;
   }

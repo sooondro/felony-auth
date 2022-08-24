@@ -1,5 +1,5 @@
 'use strict';
-import { Model } from 'sequelize';
+import { Model, UUIDV4 } from 'sequelize';
 
 interface UserAttributes {
   id: string;
@@ -39,10 +39,10 @@ module.exports = (sequelize: any, DataTypes: any) => {
         // defaultValue: UUIDV4,
         // allowNull: false,
         // primaryKey: true,
-        type: DataTypes.INTEGER,
+        type: DataTypes.UUID,
+        defaultValue: UUIDV4,
         allowNull: false,
         primaryKey: true,
-        autoIncrement: true,
       },
       username: {
         type: DataTypes.STRING,

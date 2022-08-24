@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize-typescript';
+import { Sequelize } from 'sequelize';
 import Bcrypt from 'bcrypt';
 
 import RegistrationData from "../../types/RegistrationData";
@@ -12,6 +12,8 @@ import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 // import TwoFactorUser from "./models/TwoFactorUser";
 
 import db from "./db/models";
+const DB: any = db;
+const { User, TwoFactorUser } = DB;
 // import from "./db/models/user";
 
 import StorageAdapterInterface from "../StorageAdapterInterface";
@@ -24,7 +26,7 @@ import { ValidationErrors } from '../../error/ValidationError';
 export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client!: Sequelize;
-  private authentication!: Authentication; //pitanje ? ili !
+  private authentication!: Authentication; //PITANJE ? ili !
 
   // constructor( // PITANJE izbacio, postavlja se pomocu metoda
   //   config: {
@@ -55,19 +57,14 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws
    */
   async setupPostgresConnectionWithConnectionData(config: PostgresConnectionData) {
-    this.client = new Sequelize(
-      {
-        host: config.host,
-        port: config.port,
-        database: config.database,
-        dialect: 'postgres',
-        username: config.username,
-        password: config.password,
-        models: [db.User, db.TwoFactorUser],
-      },
-    );
+    this.client = new Sequelize(config.database, config.username, config.password, {
+      dialect: 'postgres',
+      host: config.host,
+      port: config.port,
+      // models: [User, TwoFactorUser],
+    });
 
-    await this.authenticateConnection();
+    // await this.client.authenticate();
   }
 
   /**
@@ -77,22 +74,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws
    */
   async setupPostgresConnectionWithConnectionUri(connectionUri: string) {
-    this.client = new Sequelize(
-      connectionUri,
-      {
-        models: [db.User, db.TwoFactorUser],
-      }
-    );
-
-    await this.authenticateConnection();
-  }
-
-  /**
-   * Authenticate Postgres client connection.
-   * @throws 
-   */
-  async authenticateConnection() {
-    await this.client.authenticate();
+    this.client = new Sequelize(connectionUri);
+    // await this.client.authenticate();
   }
 
   /**
@@ -102,10 +85,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableUser>}
    * @throws
    */
-  async register(payload: RegistrationData): Promise<AuthenticableUser> {
+  async register(payload: RegistrationData): Promise<AuthenticableUser> {    
     const hashedPassword = await Bcrypt.hash(payload.password, 12);
 
-    const [user, created] = await db.User.findOrCreate({
+    const [user, created] = await User.findOrCreate({
       where: { email: payload.email },
       defaults: {
         username: payload.username,
@@ -114,7 +97,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         email: payload.email,
         password: hashedPassword,
       }
-    });
+    });    
 
     if (!created) {
       const validationErrors = new ValidationErrors();
@@ -135,7 +118,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws
    */
   async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser> {
-    const [user, created] = await db.TwoFactorUser.findOrCreate({
+    const [user, created] = await TwoFactorUser.findOrCreate({
       where: { userId: twoFactorUser.userId },
       defaults: {
         userId: twoFactorUser.userId,
@@ -166,7 +149,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws
    */
   async login(payload: LoginData): Promise<AuthenticableUser> {
-    const user = await db.User.findOne({
+    const user = await User.findOne({
       where: { email: payload.email }
     });
 
@@ -198,7 +181,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws 
    */
   async getUserByEmail(email: string): Promise<AuthenticableUser> {
-    const user = await db.User.findOne({
+    const user = await User.findOne({
       where: { email: email }
     });
 
@@ -224,7 +207,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws Login Error
    */
   async getUserById(id: string): Promise<AuthenticableUser> {
-    const user = await db.User.findByPk(id);
+    const user = await User.findByPk(id);
 
     if (!user) {
       // const error = new ValidationError("id");
@@ -247,7 +230,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableUser>}
    */
   async getUserByUsername(username: string): Promise<AuthenticableUser> {
-    const user = await db.User.findOne({
+    const user = await User.findOne({
       where: { username: username }
     });
 
@@ -272,7 +255,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {AuthenticableTwoFactorUser}
    */
   async getTwoFactorUser(user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
-    const twoFactorUser = await db.TwoFactorUser.findOne({
+    const twoFactorUser = await TwoFactorUser.findOne({
       where: { userId: user.id }
     });
 
@@ -295,7 +278,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableTwoFactorUser>}
    */
   async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
-    const user = await db.TwoFactorUser.findOne({
+    const user = await TwoFactorUser.findOne({
       where: { email: email }
     });
 
@@ -322,7 +305,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<void>}
    */
   async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
-    const user = await db.User.findOne({
+    const user = await User.findOne({
       where: { email: email }
     });
 
@@ -343,7 +326,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
     const newHashedPassword = await Bcrypt.hash(newPassword, 12);
 
-    await db.User.update(
+    await User.update(
       { password: newHashedPassword },
       { where: { email: email } }
     );

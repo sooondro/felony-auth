@@ -1,5 +1,5 @@
 export class ValidationErrors extends Error {
-  public satusCode = 422;
+  public statusCode = 422;
   public errors: Map<string, ValidationError> = new Map<string, ValidationError>;
 
   constructor() {
@@ -24,7 +24,7 @@ export class ValidationErrors extends Error {
     // return hasErrors;
 
     for (const value of this.errors.values()) {
-      if(!value.isEmpty()) {
+      if (!value.isEmpty()) {
         return true;
       }
     }

@@ -23,13 +23,13 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   handleError(error: string | ErrorData | Error | AuthenticationError | ValidationErrors): AuthenticationError | ValidationErrors {
     if (typeof error === "string") {
-      return new AuthenticationError("AuthenticationError", error, 401);
+      return new AuthenticationError(error, { name: "AuthenticationError", statusCode: 401 });
     } else if (error instanceof AuthenticationError || error instanceof ValidationErrors) {
       return error;
     } else if (error instanceof Error) {
-      return new AuthenticationError(error.name, error.message, 500);
+      return new AuthenticationError(error.message, { name: error.name, statusCode: 500 });
     }
-    return new AuthenticationError(error.name, error.message, error.statusCode);
+    return new AuthenticationError(error.message, { name: error.name, statusCode: error.statusCode });
   }
 
   // /**

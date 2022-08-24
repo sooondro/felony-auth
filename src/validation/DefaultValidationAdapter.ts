@@ -13,7 +13,7 @@ import { ValidationErrors } from '../error/ValidationError';
  * @type {Class}
  */
 export default class DefaultValidationAdapter implements ValidationAdapterInterface {
-  private authentication!: Authentication;
+  private authentication?: Authentication;
 
   /**
    * Used for injecting Authentication class into the adapter
