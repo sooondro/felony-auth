@@ -1,5 +1,5 @@
 export default class AuthenticationError extends Error {
-  public statusCode?: number;
+  public statusCode: number;
   public raw?: Error;
 
   constructor(message: string, optionalParameters:{name?: string, statusCode?: number, raw?: Error} = {}) { 

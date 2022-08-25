@@ -10,7 +10,7 @@ interface TwoFactorUserAttributes {
   updatedAt: Date;
 }
 
-module.exports = (sequelize: any, DataTypes: any) => {
+export default (sequelize: any, DataTypes: any): any => {
   class TwoFactorUser extends Model<TwoFactorUserAttributes> implements TwoFactorUser {
     /**
      * Helper method for defining associations.

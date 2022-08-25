@@ -1,4 +1,4 @@
-import { Sequelize } from 'sequelize';
+import { Sequelize, DataTypes } from 'sequelize';
 import Bcrypt from 'bcrypt';
 
 import RegistrationData from "../../types/RegistrationData";
@@ -11,10 +11,12 @@ import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 // import User from "./models/User";
 // import TwoFactorUser from "./models/TwoFactorUser";
 
-import db from "./db/models";
-const DB: any = db;
-const { User, TwoFactorUser } = DB;
+// import db from "./db/models";
+// const DB: any = db;
+// const { User, TwoFactorUser } = DB;
 // import from "./db/models/user";
+
+import Models from "./Models";
 
 import StorageAdapterInterface from "../StorageAdapterInterface";
 import Authentication from '../../Authentication';
@@ -27,6 +29,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client!: Sequelize;
   private authentication!: Authentication; //PITANJE ? ili !
+  public models!: Models;
 
   // constructor( // PITANJE izbacio, postavlja se pomocu metoda
   //   config: {
@@ -64,17 +67,23 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       // models: [User, TwoFactorUser],
     });
 
+    this.models = new Models(this.client, DataTypes);
     // await this.client.authenticate();
   }
 
   /**
    * Set up Postgres client with connection string.
    * 
-   * @param {string} connectionUri 
+   * @param {string} connectionUri
    * @throws
    */
   async setupPostgresConnectionWithConnectionUri(connectionUri: string) {
-    this.client = new Sequelize(connectionUri);
+    this.client = new Sequelize(connectionUri), { 
+      dialect: "postgres",  
+      logging: false 
+    };
+
+    this.models = new Models(this.client, DataTypes);
     // await this.client.authenticate();
   }
 
@@ -85,10 +94,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableUser>}
    * @throws
    */
-  async register(payload: RegistrationData): Promise<AuthenticableUser> {    
+  async register(payload: RegistrationData): Promise<AuthenticableUser> {
     const hashedPassword = await Bcrypt.hash(payload.password, 12);
 
-    const [user, created] = await User.findOrCreate({
+    const [user, created] = await this.models.User.findOrCreate({
       where: { email: payload.email },
       defaults: {
         username: payload.username,
@@ -97,7 +106,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
         email: payload.email,
         password: hashedPassword,
       }
-    });    
+    });
 
     if (!created) {
       const validationErrors = new ValidationErrors();
@@ -113,26 +122,23 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   /**
    * Register two-factor user.
    * 
-   * @param {TwoFactorRegistrationData} twoFactorUser 
+   * @param {TwoFactorRegistrationData} payload 
    * @return {Promise<AuthenticableTwoFactorUser>}
    * @throws
    */
-  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser> {
-    const [user, created] = await TwoFactorUser.findOrCreate({
-      where: { userId: twoFactorUser.userId },
+  async registerTwoFactorUser(payload: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser> {
+    const [user, created] = await this.models.TwoFactorUser.findOrCreate({
+      where: { userId: payload.userId, provider: payload.provider },
       defaults: {
-        userId: twoFactorUser.userId,
-        provider: twoFactorUser.provider,
-        secret: twoFactorUser.secret,
+        userId: payload.userId,
+        provider: payload.provider,
+        secret: payload.secret,
       }
     });
 
     if (!created) {
-      // const error = new ValidationError("email");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
       const validationErrors = new ValidationErrors();
-      validationErrors.addError("email", "invalid credentials");
+      validationErrors.addError("id", "invalid credentials"); // PITANJE
       throw validationErrors;
     }
 
@@ -149,14 +155,11 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws
    */
   async login(payload: LoginData): Promise<AuthenticableUser> {
-    const user = await User.findOne({
+    const user = await this.models.User.findOne({
       where: { email: payload.email }
     });
 
     if (!user) {
-      // const error = new ValidationError("email");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
       const validationErrors = new ValidationErrors();
       validationErrors.addError("email", "invalid credentials");
       throw validationErrors;
@@ -181,14 +184,11 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws 
    */
   async getUserByEmail(email: string): Promise<AuthenticableUser> {
-    const user = await User.findOne({
+    const user = await this.models.User.findOne({
       where: { email: email }
     });
 
     if (!user) {
-      // const error = new ValidationError("email");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
       const validationErrors = new ValidationErrors();
       validationErrors.addError("email", "invalid credentials");
       throw validationErrors;
@@ -207,12 +207,9 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @throws Login Error
    */
   async getUserById(id: string): Promise<AuthenticableUser> {
-    const user = await User.findByPk(id);
+    const user = await this.models.User.findByPk(id);
 
     if (!user) {
-      // const error = new ValidationError("id");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
       const validationErrors = new ValidationErrors();
       validationErrors.addError("id", "invalid credentials");
       throw validationErrors;
@@ -230,14 +227,11 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableUser>}
    */
   async getUserByUsername(username: string): Promise<AuthenticableUser> {
-    const user = await User.findOne({
+    const user = await this.models.User.findOne({
       where: { username: username }
     });
 
     if (!user) {
-      // const error = new ValidationError("username");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
       const validationErrors = new ValidationErrors();
       validationErrors.addError("username", "invalid credentials");
       throw validationErrors;
@@ -255,14 +249,11 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {AuthenticableTwoFactorUser}
    */
   async getTwoFactorUser(user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
-    const twoFactorUser = await TwoFactorUser.findOne({
+    const twoFactorUser: AuthenticableTwoFactorUser = await this.models.TwoFactorUser.findOne({
       where: { userId: user.id }
     });
 
     if (!twoFactorUser) {
-      // const error = new ValidationError("id");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
       const validationErrors = new ValidationErrors();
       validationErrors.addError("id", "invalid credentials");
       throw validationErrors;
@@ -271,30 +262,27 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     return twoFactorUser;
   }
 
-  /**
-   * Fetch two-factor user from the database by email.
-   * 
-   * @param {string} email 
-   * @return {Promise<AuthenticableTwoFactorUser>}
-   */
-  async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
-    const user = await TwoFactorUser.findOne({
-      where: { email: email }
-    });
+  // /**
+  //  * Fetch two-factor user from the database by email.
+  //  * 
+  //  * @param {string} email 
+  //  * @return {Promise<AuthenticableTwoFactorUser>}
+  //  */
+  // async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
+  //   const user = await this.models.TwoFactorUser.findOne({
+  //     where: { email: email }
+  //   });
 
-    if (!user) {
-      // const error = new ValidationError("email");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
-      const validationErrors = new ValidationErrors();
-      validationErrors.addError("email", "invalid credentials");
-      throw validationErrors;
-    }
+  //   if (!user) {
+  //     const validationErrors = new ValidationErrors();
+  //     validationErrors.addError("email", "invalid credentials");
+  //     throw validationErrors;
+  //   }
 
-    const authUser: AuthenticableTwoFactorUser = user;
+  //   const authUser: AuthenticableTwoFactorUser = user;
 
-    return authUser;
-  }
+  //   return authUser;
+  // }
 
   /**
    * Change user's password.
@@ -305,14 +293,11 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<void>}
    */
   async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
-    const user = await User.findOne({
+    const user = await this.models.User.findOne({
       where: { email: email }
     });
 
     if (!user) {
-      // const error = new ValidationError("email");
-      // error.addErrorMessage("Invalid credentials!");
-      // throw error;
       const validationErrors = new ValidationErrors();
       validationErrors.addError("email", "invalid credentials");
       throw validationErrors;
@@ -326,45 +311,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
     const newHashedPassword = await Bcrypt.hash(newPassword, 12);
 
-    await User.update(
+    await this.models.User.update(
       { password: newHashedPassword },
       { where: { email: email } }
     );
   }
-
-  // /**
-  //  * Convert a class User object to object of type AuthenticableUser.
-  //  * 
-  //  * @param {User} user 
-  //  * @return {AuthenticableUser}
-  //  */
-  // convertUserToAuthenticableUser(user: User): AuthenticableUser {
-  //   const authUser: AuthenticableUser = {
-  //     id: user.id,
-  //     username: user.username,
-  //     firstName: user.firstName,
-  //     lastName: user.lastName,
-  //     email: user.email
-  //   }
-
-  //   return authUser;
-  // }
-
-  // /**
-  //  * Convert a class TwoFactorUser object to object of type AuthenticableTwoFactorUser.
-  //  * 
-  //  * @param {TwoFactorUser} user 
-  //  * @return {AuthenticableTwoFactorUser}
-  //  */
-  // convertTwoFactorUserToAuthenticableTwoFactorUser(user: TwoFactorUser): AuthenticableTwoFactorUser {
-  //   const authUser: AuthenticableTwoFactorUser = {
-  //     id: user.id,
-  //     email: user.email,
-  //     provider: user.provider,
-  //     secret: user.secret
-  //   }
-
-  //   return authUser;
-  // }
 }
 

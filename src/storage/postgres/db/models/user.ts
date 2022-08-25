@@ -12,7 +12,7 @@ interface UserAttributes {
   updatedAt: Date;
 }
 
-module.exports = (sequelize: any, DataTypes: any) => {
+export default (sequelize: any, DataTypes: any): any => {
   class User extends Model<UserAttributes> implements UserAttributes {
     /**
      * Helper method for defining associations.

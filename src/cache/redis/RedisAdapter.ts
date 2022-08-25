@@ -12,8 +12,6 @@ import Session from "../../types/Session";
  */
 export default class RedisAdapter implements CacheAdapterInterface {
 
-	constructor(private url: string) { }
-
 	private client!: RedisClientType; // PITANJE
 	private authentication!: Authentication;
 
@@ -26,9 +24,9 @@ export default class RedisAdapter implements CacheAdapterInterface {
 		this.authentication = authentication;
 	}
 
-	createConnection() {
+	createConnection(url: string) {
 		this.client = createClient({
-			url: this.url,
+			url,
 		});
 
 		this.client.connect();

@@ -1,6 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 require('dotenv').config()
-module.exports = {
+const config = {
   // "development": {
   //   // "use_env_variable": "DATABASE_URL",
   //   "username": "postgres",
@@ -29,7 +29,6 @@ module.exports = {
   //   "dialect": "postgres"
   // }
   "development": {
-    "use_env_variable": "DATABASE_URL",
     "username": "postgres",
     "password": "postgrespw",
     "database": "felony_auth",
@@ -44,7 +43,6 @@ module.exports = {
     "host": "127.0.0.1",
     "port": "5432",
     "dialect": "postgres",
-    "logging": false,
   },
   "production": {
     "use_env_variable": "DATABASE_URL",
@@ -56,3 +54,5 @@ module.exports = {
     "dialect": "postgres"
   }
 };
+
+module.exports = config;

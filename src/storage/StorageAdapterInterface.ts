@@ -63,7 +63,7 @@ export default interface StorageAdapterInterface {
    * 
    * @param {string} email 
    */
-  getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser>;
+  //getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser>;
 
   /**
    * Register two-factor user to the database.
