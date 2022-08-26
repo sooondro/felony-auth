@@ -19,21 +19,13 @@ export default interface TwoFactorProviderInterface {
 	 * @param {Authentication} authentication 
 	 */
 	initialize(authentication: Authentication): void;
-	
-	/**
-	 * Verifies the 2FA data e.g. if the one time password (TOTP) is valid.
-	 * 
-	 * @param {AuthenticableTwoFactorUser} user
-	 * @param {string} code
-	 */
-	verify(user: AuthenticableTwoFactorUser, code: string): Promise<AuthenticableTwoFactorUser>
 
 	/**
 	 * Register a new 2FA user and save it in the database. Returns a QR code. 
 	 * 
 	 * @param {AuthenticableUser} user 
 	 */
-	register(user: AuthenticableUser): Promise<TwoFactorRegistrationData>;
+	register(user: AuthenticableUser): TwoFactorRegistrationData;
 
 	/**
 	 * Generates QR code based on two-factor registration data.
@@ -41,4 +33,12 @@ export default interface TwoFactorProviderInterface {
 	 * @param {AuthenticableTwoFactorUser} user 
 	 */
 	generateQRCode(user: AuthenticableTwoFactorUser): Promise<string>;
+
+	/**
+	 * Verifies the 2FA data e.g. if the one time password (TOTP) is valid.
+	 * 
+	 * @param {AuthenticableTwoFactorUser} user
+	 * @param {string} code
+	 */
+	verify(user: AuthenticableTwoFactorUser, code: string): void;
 }

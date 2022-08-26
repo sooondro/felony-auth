@@ -6,7 +6,7 @@
   "scripts": {
     "make-user-model": "npx sequelize-cli model:generate --name user --attributes username:string,first_name:string,last_name:string,email:string,password:string",
     "make-two-factor-user-model": "npx sequelize-cli model:generate --name two_factor_user --attributes secret:string,provider:string",
-    "migrate": "npx sequelize-cli db:migrate",
+    "migrate": "NODE_ENV=test npx sequelize-cli db:migrate",
     "migrate-env": "DATABASE_URL=postgres://postgres:postgrespw@localhost:5432/felony_auth npx sequelize-cli db:migrate",
     "migrate-down": "npx sequelize-cli db:migrate:undo",
     "migrate-down-all": "npx sequelize-cli db:migrate:undo:all",
@@ -34,7 +34,7 @@
     "qrcode": "^1.5.1",
     "redis": "^4.2.0",
     "reflect-metadata": "^0.1.13",
-    "sequelize": "^6.21.2",
+    "sequelize": "^6.21.4",
     "uuid": "^8.3.2",
     "validator": "^13.7.0"
   },

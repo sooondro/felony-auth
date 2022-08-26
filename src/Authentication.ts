@@ -15,70 +15,70 @@ import { ValidationErrors } from "./error/ValidationError";
 
 export default class Authentication {
 
-	private _errorAdapter!: ErrorAdapterInterface;
-	private _validationAdapter!: ValidationAdapterInterface;
-	private _storageAdapter!: StorageAdapterInterface;
-	private _globalAuthConfig!: object;
-	private _cacheAdapter!: CacheAdapterInterface;
-	private _twoFactorProvider!: TwoFactorProviderInterface;
-	// private _twoFactorProviders: Map<string, TwoFactorProviderInterface>;
+	private errorAdapter!: ErrorAdapterInterface;
+	private validationAdapter!: ValidationAdapterInterface;
+	private storageAdapter!: StorageAdapterInterface;
+	private globalAuthConfig!: object;
+	private cacheAdapter!: CacheAdapterInterface;
+	private twoFactorProvider!: TwoFactorProviderInterface;
+	// private twoFactorProviders: Map<string, TwoFactorProviderInterface>;
 
-	public get errorAdapter() {
-		return this._errorAdapter;
+	public get ErrorAdapter() {
+		return this.errorAdapter;
 	}
-	public set errorAdapter(errorAdapter: ErrorAdapterInterface) {
+	public set ErrorAdapter(errorAdapter: ErrorAdapterInterface) {
 		if (typeof errorAdapter.initialize === "function") {
 			errorAdapter.initialize(this);
 		}
-		this._errorAdapter = errorAdapter;
+		this.errorAdapter = errorAdapter;
 	}
-	public get validationAdapter() {
-		return this._validationAdapter;
+	public get ValidationAdapter() {
+		return this.validationAdapter;
 	}
-	public set validationAdapter(validationAdapter: ValidationAdapterInterface) {
+	public set ValidationAdapter(validationAdapter: ValidationAdapterInterface) {
 		if (typeof validationAdapter.initialize === "function") {
 			validationAdapter.initialize(this);
 		}
-		this._validationAdapter = validationAdapter;
+		this.validationAdapter = validationAdapter;
 	}
-	public get storageAdapter() {
-		return this._storageAdapter;
+	public get StorageAdapter() {
+		return this.storageAdapter;
 	}
-	public set storageAdapter(storageAdapter: StorageAdapterInterface) {
+	public set StorageAdapter(storageAdapter: StorageAdapterInterface) {
 		if (typeof storageAdapter.initialize === "function") {
 			storageAdapter.initialize(this);
 		}
-		this._storageAdapter = storageAdapter;
+		this.storageAdapter = storageAdapter;
 	}
-	public get cacheAdapter() {
-		return this._cacheAdapter;
+	public get CacheAdapter() {
+		return this.cacheAdapter;
 	}
-	public set cacheAdapter(cacheAdapter: CacheAdapterInterface) {
+	public set CacheAdapter(cacheAdapter: CacheAdapterInterface) {
 		if (typeof cacheAdapter.initialize === "function") {
 			cacheAdapter.initialize(this);
 		}
-		this._cacheAdapter = cacheAdapter;
+		this.cacheAdapter = cacheAdapter;
 	}
-	public set twoFactorProvider(twoFactorProvider: TwoFactorProviderInterface) {
+	public set TwoFactorProvider(twoFactorProvider: TwoFactorProviderInterface) {
 		if (typeof twoFactorProvider.initialize === "function") {
 			twoFactorProvider.initialize(this);
 		}
-		this._twoFactorProvider = twoFactorProvider;
+		this.twoFactorProvider = twoFactorProvider;
 	}
-	public get twoFactorProvider() {
-		return this._twoFactorProvider;
+	public get TwoFactorProvider() {
+		return this.twoFactorProvider;
 	}
-	public get globalAuthConfig() {
-		return this._globalAuthConfig;
+	public get GlobalAuthConfig() {
+		return this.globalAuthConfig;
 	}
 	// public set twoFactorProvider(twoFactorProvider: TwoFactorProviderInterface) {
-	// 	this._twoFactorProviders.set(twoFactorProvider.provider, twoFactorProvider);
+	// 	this.twoFactorProviders.set(twoFactorProvider.provider, twoFactorProvider);
 	// }
 	// public get twoFactorProviders() {
-	// 	return this._twoFactorProviders;
+	// 	return this.twoFactorProviders;
 	// }
 	// public set twoFactorProviders(twoFactorProviders: Map<string, TwoFactorProviderInterface>) {
-	// 	this._twoFactorProviders = twoFactorProviders;
+	// 	this.twoFactorProviders = twoFactorProviders;
 	// }
 
 	/**
@@ -100,9 +100,9 @@ export default class Authentication {
 				}
 			};
 
-			this._validationAdapter.registration(payload);
+			this.validationAdapter.registration(payload);
 
-			const user = await this._storageAdapter.register(payload);
+			const user = await this.storageAdapter.register(payload);
 			result.user = user;
 
 			if (payload.twoFactorAuthentication) {
@@ -114,7 +114,7 @@ export default class Authentication {
 			return result;
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -126,21 +126,21 @@ export default class Authentication {
 	 */
 	async login(payload: LoginData): Promise<string> {
 		try {
-			this._validationAdapter.login(payload);
+			this.validationAdapter.login(payload);
 
-			const user = await this._storageAdapter.login(payload);
+			const user = await this.storageAdapter.login(payload);
 
-			const twoFactorUser = await this._storageAdapter.getTwoFactorUser(user);
+			const twoFactorUser = await this.storageAdapter.getTwoFactorUser(user);
 
 			if (payload.twoFactorAuthentication && payload.twoFactorAuthenticationData) {
-				await this._twoFactorProvider.verify(twoFactorUser, payload.twoFactorAuthenticationData.code);
+				this.twoFactorProvider.verify(twoFactorUser, payload.twoFactorAuthenticationData.code);
 			}
 
-			const sessionId = await this._cacheAdapter.createSession(user);
+			const sessionId = await this.cacheAdapter.createSession(user);
 			return sessionId;
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -151,16 +151,16 @@ export default class Authentication {
 	 */
 	async registerTwoFactorUser(user: AuthenticableUser): Promise<{ twoFactorUser: AuthenticableTwoFactorUser; qrCode: string; }> {
 		try {
-			const twoFactorUserRegistrationData = await this._twoFactorProvider.register(user);
+			const twoFactorUserRegistrationData = this.twoFactorProvider.register(user);
 
-			const twoFactorUser = await this._storageAdapter.registerTwoFactorUser(twoFactorUserRegistrationData);
+			const twoFactorUser = await this.storageAdapter.registerTwoFactorUser(twoFactorUserRegistrationData);
 
-			const qrCode = await this._twoFactorProvider.generateQRCode(twoFactorUser);
+			const qrCode = await this.twoFactorProvider.generateQRCode(twoFactorUser);
 
 			return { twoFactorUser, qrCode };
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -172,12 +172,12 @@ export default class Authentication {
 	 */
 	async registerTwoFactorUserBySessionId(sessionId: string): Promise<{ twoFactorUser: AuthenticableTwoFactorUser; qrCode: string; }> {
 		try {
-			const session = await this._cacheAdapter.getSession(sessionId);
+			const session = await this.cacheAdapter.getSession(sessionId);
 
 			return await this.registerTwoFactorUser(session.user);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -188,10 +188,10 @@ export default class Authentication {
 	 */
 	async verifyTwoFactorUser(twoFactorUser: AuthenticableTwoFactorUser, code: string) {
 		try {
-			await this._twoFactorProvider.verify(twoFactorUser, code);
+			this.twoFactorProvider.verify(twoFactorUser, code);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -203,11 +203,11 @@ export default class Authentication {
 	 */
 	async verifyTwoFactorUserByAuthenticableUser(user: AuthenticableUser, code: string) {
 		try {
-			const twoFactorUser = await this._storageAdapter.getTwoFactorUser(user);
-			await this._twoFactorProvider.verify(twoFactorUser, code);
+			const twoFactorUser = await this.storageAdapter.getTwoFactorUser(user);
+			this.twoFactorProvider.verify(twoFactorUser, code);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -219,10 +219,10 @@ export default class Authentication {
 	 */
 	async validateCSRFToken(sessionId: string, token: string): Promise<void> {
 		try {
-			this._cacheAdapter.validateCSRF(sessionId, token);
+			this.cacheAdapter.validateCSRF(sessionId, token);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -232,7 +232,7 @@ export default class Authentication {
 	 * @param {string} sessionId 
 	 */
 	async logout(sessionId: string): Promise<void> {
-		await this._cacheAdapter.logout(sessionId);
+		await this.cacheAdapter.logout(sessionId);
 	}
 
 	/**
@@ -243,10 +243,10 @@ export default class Authentication {
 	 */
 	async getSession(sessionId: string): Promise<Session> {
 		try {
-			return this._cacheAdapter.getSession(sessionId);
+			return this.cacheAdapter.getSession(sessionId);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
@@ -257,29 +257,29 @@ export default class Authentication {
 	 */
 	async createSession(payload: AuthenticableUser): Promise<string> {
 		try {
-			return await this._cacheAdapter.createSession(payload);
+			return await this.cacheAdapter.createSession(payload);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
 
 	async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
 		try {
-			await this._storageAdapter.changePassword(email, oldPassword, newPassword);
+			await this.storageAdapter.changePassword(email, oldPassword, newPassword);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 
 	async getTwoFactorUser(user: AuthenticableUser) { //PITANJE koristit ovo ili direktno pozivat
 		try {
-			return await this._storageAdapter.getTwoFactorUser(user);
+			return await this.storageAdapter.getTwoFactorUser(user);
 		} catch (error: any) {
 			const err: string | ErrorData | Error | AuthenticationError | ValidationErrors = error;
-			throw this._errorAdapter.handleError(err);
+			throw this.errorAdapter.handleError(err);
 		}
 	}
 

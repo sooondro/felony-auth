@@ -35,10 +35,6 @@ export default (sequelize: any, DataTypes: any): any => {
   User.init(
     {
       id: {
-        // type: DataTypes.UUID,
-        // defaultValue: UUIDV4,
-        // allowNull: false,
-        // primaryKey: true,
         type: DataTypes.UUID,
         defaultValue: UUIDV4,
         allowNull: false,

@@ -1,11 +1,12 @@
-import PostgresAdapter from "../../../src/storage/postgres/PostgresAdapter";
-import RegistrationData from "../../../src/types/RegistrationData";
 import Sequelize from 'sequelize';
 
+import PostgresAdapter from "../../../src/storage/postgres/PostgresAdapter";
 import { ValidationErrors } from "../../../src/error/ValidationError";
-import TwoFactorRegistrationData from "../../../src/types/TwoFactorRegistrationData";
 import LoginData from "../../../src/types/LoginData";
+import TwoFactorRegistrationData from "../../../src/types/TwoFactorRegistrationData";
+import RegistrationData from "../../../src/types/RegistrationData";
 import AuthenticableUser from "../../../src/types/AuthenticableUser";
+import PostgresConnectionData from "../../../src/types/PostgresConnectionData";
 
 describe("PostgresAdapter", () => {
   let postgresAdapter: PostgresAdapter;
@@ -16,50 +17,50 @@ describe("PostgresAdapter", () => {
   //   await postgresAdapter.models.User.destroy({ where: {} });
   //   await postgresAdapter.models.TwoFactorUser.destroy({ where: {} });
   // });
-  // describe("setupPostgresConnectionWithConnectionData", () => {
-  //   it("should instantiate the client when valid connection data is passed", async () => {
-  //     const postgresAdapter = new PostgresAdapter();
-  //     const config: PostgresConnectionData = {
-  //       database: "felony_auth_test",
-  //       username: "postgres",
-  //       password: "postgrespw",
-  //       host: "127.0.0.1",
-  //       dialect: "postgres",
-  //       port: 5432
-  //     };
+  describe("setupPostgresConnectionWithConnectionData", () => {
+    it("should instantiate the client when valid connection data is passed", async () => {
+      const postgresAdapter = new PostgresAdapter();
+      const config: PostgresConnectionData = {
+        database: "felony_auth_test",
+        username: "postgres",
+        password: "postgrespw",
+        host: "127.0.0.1",
+        dialect: "postgres",
+        port: 5432
+      };
 
-  //     jest.spyOn(postgresAdapter, "setupPostgresConnectionWithConnectionData");
+      jest.spyOn(postgresAdapter, "setupPostgresConnectionWithConnectionData");
 
-  //     await postgresAdapter.setupPostgresConnectionWithConnectionData(config);
+      await postgresAdapter.setupPostgresConnectionWithConnectionData(config);
 
-  //     expect(postgresAdapter.setupPostgresConnectionWithConnectionData).toHaveBeenCalledTimes(1);
-  //     expect(postgresAdapter["client"]).toBeDefined();
-  //     expect(postgresAdapter["client"]["config"].database).toEqual("felony_auth_test");
-  //     expect(postgresAdapter["client"]["config"].username).toEqual("postgres");
-  //     expect(postgresAdapter["client"]["config"].password).toEqual("postgrespw");
-  //     expect(postgresAdapter["client"]["config"].host).toEqual("127.0.0.1");
-  //     expect(postgresAdapter["client"]["config"].port).toEqual(5432);
-  //   });
-  // });
+      expect(postgresAdapter.setupPostgresConnectionWithConnectionData).toHaveBeenCalledTimes(1);
+      expect(postgresAdapter["client"]).toBeDefined();
+      expect(postgresAdapter["client"]["config"].database).toEqual("felony_auth_test");
+      expect(postgresAdapter["client"]["config"].username).toEqual("postgres");
+      expect(postgresAdapter["client"]["config"].password).toEqual("postgrespw");
+      expect(postgresAdapter["client"]["config"].host).toEqual("127.0.0.1");
+      expect(postgresAdapter["client"]["config"].port).toEqual(5432);
+    });
+  });
 
-  // describe("setupPostgresConnectionWithConnectionUri", () => {
-  //   it("should instantiate the client when valid connection uri is passed", async () => {
-  //     const postgresAdapter = new PostgresAdapter();
-  //     const connectioUri = "postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test";
+  describe("setupPostgresConnectionWithConnectionUri", () => {
+    it("should instantiate the client when valid connection uri is passed", async () => {
+      const postgresAdapter = new PostgresAdapter();
+      const connectioUri = "postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test";
 
-  //     jest.spyOn(postgresAdapter, "setupPostgresConnectionWithConnectionUri");
+      jest.spyOn(postgresAdapter, "setupPostgresConnectionWithConnectionUri");
 
-  //     await postgresAdapter.setupPostgresConnectionWithConnectionUri(connectioUri);
+      await postgresAdapter.setupPostgresConnectionWithConnectionUri(connectioUri);
 
-  //     expect(postgresAdapter.setupPostgresConnectionWithConnectionUri).toHaveBeenCalledTimes(1);
-  //     expect(postgresAdapter["client"]).toBeDefined();
-  //     expect(postgresAdapter["client"]["config"].database).toEqual("felony_auth_test");
-  //     expect(postgresAdapter["client"]["config"].username).toEqual("postgres");
-  //     expect(postgresAdapter["client"]["config"].password).toEqual("postgrespw");
-  //     expect(postgresAdapter["client"]["config"].host).toEqual("127.0.0.1");
-  //     expect(postgresAdapter["client"]["config"].port).toEqual("5432");
-  //   });
-  // });
+      expect(postgresAdapter.setupPostgresConnectionWithConnectionUri).toHaveBeenCalledTimes(1);
+      expect(postgresAdapter["client"]).toBeDefined();
+      expect(postgresAdapter["client"]["config"].database).toEqual("felony_auth_test");
+      expect(postgresAdapter["client"]["config"].username).toEqual("postgres");
+      expect(postgresAdapter["client"]["config"].password).toEqual("postgrespw");
+      expect(postgresAdapter["client"]["config"].host).toEqual("127.0.0.1");
+      expect(postgresAdapter["client"]["config"].port).toEqual("5432");
+    });
+  });
 
   describe("register", () => {
     beforeEach(async () => {

@@ -16,7 +16,7 @@ import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 // const { User, TwoFactorUser } = DB;
 // import from "./db/models/user";
 
-import Models from "./Models";
+import Models from "./db/models/Models";
 
 import StorageAdapterInterface from "../StorageAdapterInterface";
 import Authentication from '../../Authentication';
@@ -44,6 +44,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   //   }
   // }
 
+  public get Client(): Sequelize {
+    return this.client;
+  }
+
   /**
    * Used for injecting Authentication class into the adapter.
    * 
@@ -64,6 +68,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       dialect: 'postgres',
       host: config.host,
       port: config.port,
+      logging: false,
       // models: [User, TwoFactorUser],
     });
 

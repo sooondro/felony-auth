@@ -7,15 +7,15 @@ export default interface SessionInterface {
   /**
    * Getter for the session ID.
    */
-  get id(): string;
+  get Id(): string;
 
   /**
    * Getter for the CSRF token stored in the session.
    */
-  get csrf(): string;
+  get Csrf(): string;
 
   /**
    * Getter for the user stored in the session.
    */
-  get user(): AuthenticableUser;
+  get User(): AuthenticableUser;
 }

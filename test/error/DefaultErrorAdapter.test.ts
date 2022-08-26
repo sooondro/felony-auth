@@ -6,81 +6,83 @@ import ErrorData from "../../src/types/ErrorData";
 /**
  * Test for error handler
  */
-describe("handleError", () => {
-  const errorAdapter = new DefaultErrorAdapter();
+describe("DefaultErrorAdapter", () => {
+  describe("handleError", () => {
+    const errorAdapter = new DefaultErrorAdapter();
 
-  beforeEach(() => {
-    jest.spyOn(errorAdapter, "handleError");
-  });
+    beforeEach(() => {
+      jest.spyOn(errorAdapter, "handleError");
+    });
 
-  afterEach(() => {
-    // restore the spy created with spyOn
-    jest.restoreAllMocks();
-  });
+    afterEach(() => {
+      // restore the spy created with spyOn
+      jest.restoreAllMocks();
+    });
 
-  it("should return a new AuthenticationError with statusCode 401 when a string is provided", () => {
-    const error = "string error";
-    
-    const result = errorAdapter.handleError(error);
+    it("should return a new AuthenticationError with statusCode 401 when a string is provided", () => {
+      const error = "foobar";
 
-    expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
-    expect(result).toBeInstanceOf(AuthenticationError);
-    expect(result.message).toEqual("string error");
-    expect(result.name).toEqual("AuthenticationError");
+      const result = errorAdapter.handleError(error);
 
-    if (result instanceof AuthenticationError) {
-      expect(result.statusCode).toEqual(401);
-    }
-  });
+      expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
+      expect(result).toBeInstanceOf(AuthenticationError);
+      expect(result.message).toEqual("foobar");
+      expect(result.name).toEqual("AuthenticationError");
 
-  it("should return the same AuthenticationError instance if it was provided as a parameter", () => {
-    const error = new AuthenticationError("message", { name: "name", statusCode: 4323 });
+      if (result instanceof AuthenticationError) {
+        expect(result.statusCode).toEqual(401);
+      }
+    });
 
-    const result: AuthenticationError = errorAdapter.handleError(error);
+    it("should return the same AuthenticationError instance if it was provided as a parameter", () => {
+      const error = new AuthenticationError("foobar", { name: "Foo", statusCode: 4323 });
 
-    expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
-    expect(result).toBeInstanceOf(AuthenticationError);
-    expect(result).toEqual(error);
-  });
+      const result: AuthenticationError = errorAdapter.handleError(error);
 
-  it("should return the same ValidationErrors instance if it was provided as a parameter", () => {
-    const error = new ValidationErrors();
+      expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
+      expect(result).toBeInstanceOf(AuthenticationError);
+      expect(result).toEqual(error);
+    });
 
-    const result: ValidationErrors = errorAdapter.handleError(error) as ValidationErrors; // PITANJE
+    it("should return the same ValidationErrors instance if it was provided as a parameter", () => {
+      const error = new ValidationErrors();
 
-    expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
-    expect(result).toBeInstanceOf(ValidationErrors);
-    expect(result).toEqual(error);
-    expect(result.statusCode).toEqual(422);
-    expect(result.message).toEqual("ValidationError");
-  });
+      const result: ValidationErrors = errorAdapter.handleError(error) as ValidationErrors; // PITANJE
 
-  it("should return a new AuthenticationError instance created from the provided Error object", () => {
-    const error = new Error("Other error");
-    error.name = "WannabeBcryptError";
+      expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
+      expect(result).toBeInstanceOf(ValidationErrors);
+      expect(result).toEqual(error);
+      expect(result.statusCode).toEqual(422);
+      expect(result.message).toEqual("ValidationError");
+    });
 
-    const result: AuthenticationError = errorAdapter.handleError(error);
+    it("should return a new AuthenticationError instance created when an Error object is provided", () => {
+      const error = new Error("Other error");
+      error.name = "WannabeBcryptError";
 
-    expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
-    expect(result).toBeInstanceOf(AuthenticationError);
-    expect(result.name).toEqual("WannabeBcryptError");
-    expect(result.message).toEqual("Other error");
-    expect(result.statusCode).toEqual(500);
-  });
+      const result: AuthenticationError = errorAdapter.handleError(error);
 
-  it("should return a new AuthenticationError created from the provided ErrorData object", () => {
-    const error: ErrorData = {
-      name: "TestError",
-      message: "this is a test error",
-      statusCode: 500
-    };
+      expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
+      expect(result).toBeInstanceOf(AuthenticationError);
+      expect(result.name).toEqual("WannabeBcryptError");
+      expect(result.message).toEqual("Other error");
+      expect(result.statusCode).toEqual(500);
+    });
 
-    const result: AuthenticationError = errorAdapter.handleError(error);
+    it("should return a new AuthenticationError created from the provided ErrorData object", () => {
+      const error: ErrorData = {
+        name: "TestError",
+        message: "this is a test error",
+        statusCode: 500
+      };
 
-    expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
-    expect(result).toBeInstanceOf(AuthenticationError);
-    expect(result.name).toEqual("TestError");
-    expect(result.message).toEqual("this is a test error");
-    expect(result.statusCode).toEqual(500);
+      const result: AuthenticationError = errorAdapter.handleError(error);
+
+      expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
+      expect(result).toBeInstanceOf(AuthenticationError);
+      expect(result.name).toEqual("TestError");
+      expect(result.message).toEqual("this is a test error");
+      expect(result.statusCode).toEqual(500);
+    });
   });
 });

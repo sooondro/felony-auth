@@ -1,5 +1,5 @@
-import User from "./db/models/user";
-import TwoFactorUser from "./db/models/two_factor_user";
+import User from "./user";
+import TwoFactorUser from "./two_factor_user";
 
 class Models {
   public User: any;

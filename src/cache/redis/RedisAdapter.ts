@@ -24,12 +24,12 @@ export default class RedisAdapter implements CacheAdapterInterface {
 		this.authentication = authentication;
 	}
 
-	createConnection(url: string) {
+	async createConnection(url: string): Promise<void> {
 		this.client = createClient({
 			url,
 		});
 
-		this.client.connect();
+		await this.client.connect();
 	}
 
 	/**
@@ -44,8 +44,8 @@ export default class RedisAdapter implements CacheAdapterInterface {
 		// 	csrf: session.csrf,
 		// 	user: session.user,
 		// }
-		await this.client.set(session.id, JSON.stringify(session));
-		return session.id;
+		await this.client.set(session.Id, JSON.stringify(session));
+		return session.Id;
 	}
 
 	/**
