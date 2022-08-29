@@ -11,12 +11,6 @@ import PostgresConnectionData from "../../../src/types/PostgresConnectionData";
 describe("PostgresAdapter", () => {
   let postgresAdapter: PostgresAdapter;
 
-
-
-  // beforeEach(async () => {
-  //   await postgresAdapter.models.User.destroy({ where: {} });
-  //   await postgresAdapter.models.TwoFactorUser.destroy({ where: {} });
-  // });
   describe("setupPostgresConnectionWithConnectionData", () => {
     it("should instantiate the client when valid connection data is passed", async () => {
       const postgresAdapter = new PostgresAdapter();
@@ -40,6 +34,7 @@ describe("PostgresAdapter", () => {
       expect(postgresAdapter["client"]["config"].password).toEqual("postgrespw");
       expect(postgresAdapter["client"]["config"].host).toEqual("127.0.0.1");
       expect(postgresAdapter["client"]["config"].port).toEqual(5432);
+      expect(postgresAdapter["models"]).toBeDefined();
     });
   });
 
@@ -59,6 +54,7 @@ describe("PostgresAdapter", () => {
       expect(postgresAdapter["client"]["config"].password).toEqual("postgrespw");
       expect(postgresAdapter["client"]["config"].host).toEqual("127.0.0.1");
       expect(postgresAdapter["client"]["config"].port).toEqual("5432");
+      expect(postgresAdapter["models"]).toBeDefined();
     });
   });
 
@@ -314,7 +310,7 @@ describe("PostgresAdapter", () => {
 
       jest.spyOn(postgresAdapter, "register");
 
-      const user = await postgresAdapter.register(registrationData);
+      await postgresAdapter.register(registrationData);
       const authenticableUser = await postgresAdapter.login(loginData);
 
       expect(postgresAdapter.register).toHaveBeenCalledTimes(1);

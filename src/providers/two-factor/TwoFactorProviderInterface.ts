@@ -1,7 +1,6 @@
 import Authentication from "../../Authentication";
 import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 import AuthenticableUser from "../../types/AuthenticableUser";
-import TwoFactorAuthenticationData from "../../types/TwoFactorAuthenticationData";
 import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 
 /**

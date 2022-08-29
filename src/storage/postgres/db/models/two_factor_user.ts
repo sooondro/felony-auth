@@ -35,6 +35,10 @@ export default (sequelize: any, DataTypes: any): any => {
       allowNull: false,
       defaultValue: UUIDV4,
       primaryKey: true,
+      validate: {
+        isUUID: 4,
+        notEmpty: true,
+      }
     },
     userId: {
       type: DataTypes.UUID,
@@ -42,15 +46,25 @@ export default (sequelize: any, DataTypes: any): any => {
       references: {
         model: 'user',
         key: 'id',
+      }, 
+      validate: {
+        isUUID: 4,
+        notEmpty: true,
       }
     },
     secret: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notEmpty: true
+      }
     },
     provider: {
       type: DataTypes.STRING,
       allowNull: false,
+      validate: {
+        notEmpty: true
+      }
     },
     createdAt: {
       type: DataTypes.DATE,

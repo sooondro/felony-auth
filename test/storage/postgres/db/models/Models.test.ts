@@ -14,7 +14,7 @@ describe("Models", () => {
     const postgresAdapter = new PostgresAdapter();
     postgresAdapter.setupPostgresConnectionWithConnectionUri("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
 
-    const models = new Models(postgresAdapter.Client, DataTypes);
+    const models = new Models(postgresAdapter["client"], DataTypes);
 
     expect(models.TwoFactorUser).toBeDefined();
     expect(models.User).toBeDefined();

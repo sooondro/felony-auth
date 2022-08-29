@@ -23,6 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/qrcode": "^1.4.2",
+    "@types/sequelize": "^4.28.14",
     "@types/uuid": "^8.3.4",
     "bcrypt": "^5.0.1",
     "crypto-ts": "^1.0.2",

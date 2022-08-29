@@ -14,7 +14,6 @@ import AuthenticationError from "./error/AuthenticationError";
 import { ValidationErrors } from "./error/ValidationError";
 
 export default class Authentication {
-
 	private errorAdapter!: ErrorAdapterInterface;
 	private validationAdapter!: ValidationAdapterInterface;
 	private storageAdapter!: StorageAdapterInterface;
@@ -130,9 +129,8 @@ export default class Authentication {
 
 			const user = await this.storageAdapter.login(payload);
 
-			const twoFactorUser = await this.storageAdapter.getTwoFactorUser(user);
-
 			if (payload.twoFactorAuthentication && payload.twoFactorAuthenticationData) {
+				const twoFactorUser = await this.storageAdapter.getTwoFactorUser(user);
 				this.twoFactorProvider.verify(twoFactorUser, payload.twoFactorAuthenticationData.code);
 			}
 
@@ -255,7 +253,7 @@ export default class Authentication {
 	 * 
 	 * @param {AuthenticableUser} payload 
 	 */
-	async createSession(payload: AuthenticableUser): Promise<string> {
+	async createSession(payload: AuthenticableUser): Promise<string> { //PITANJE dodati provjere je li user postoji?
 		try {
 			return await this.cacheAdapter.createSession(payload);
 		} catch (error: any) {
@@ -265,6 +263,13 @@ export default class Authentication {
 	}
 
 
+	/**
+	 * Change user's password.
+	 * 
+	 * @param {string} email 
+	 * @param {string} oldPassword 
+	 * @param {string} newPassword 
+	 */
 	async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
 		try {
 			await this.storageAdapter.changePassword(email, oldPassword, newPassword);
@@ -274,7 +279,12 @@ export default class Authentication {
 		}
 	}
 
-	async getTwoFactorUser(user: AuthenticableUser) { //PITANJE koristit ovo ili direktno pozivat
+	/**
+	 * 
+	 * @param {AuthenticableUser} user 
+	 * @return {Promise<AuthenticableTwoFactorUser>}
+	 */
+	async getTwoFactorUser(user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> { //PITANJE koristit ovo ili direktno pozivat
 		try {
 			return await this.storageAdapter.getTwoFactorUser(user);
 		} catch (error: any) {
@@ -283,7 +293,7 @@ export default class Authentication {
 		}
 	}
 
-	// async getUserById(id: string): Promise<void> {
+	// async getUserById(id: string): Promise<void> { //PITANJE omogucit da iz ove klase imaju getter metode
 	// 	try {
 	// 		await this.databaseProvider.getUserById(id);
 	// 	} catch (error) {

@@ -39,18 +39,30 @@ export default (sequelize: any, DataTypes: any): any => {
         defaultValue: UUIDV4,
         allowNull: false,
         primaryKey: true,
+        validate: {
+          isUUID: 4,
+        }
       },
       username: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notEmpty: true
+        }
       },
       firstName: {
         type: DataTypes.STRING,
         field: 'first_name',
+        validate: {
+          notEmpty: true
+        }
       },
       lastName: {
         type: DataTypes.STRING,
         field: 'last_name',
+        validate: {
+          notEmpty: true
+        }
       },
       email: {
         type: DataTypes.STRING,
@@ -58,11 +70,16 @@ export default (sequelize: any, DataTypes: any): any => {
         unique: true,
         validate: {
           isEmail: true,
+          notEmpty: true,
         },
       },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          notEmpty: true,
+          len: [6, 256],
+        }
       },
       createdAt: {
         type: DataTypes.DATE,

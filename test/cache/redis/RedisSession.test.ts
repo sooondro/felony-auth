@@ -16,7 +16,6 @@ describe("RedisSession", () => {
 
       expect(redisSession).toBeDefined();
       expect(redisSession['id']).toBeDefined();
-      expect(redisSession['id']).toEqual(user.id);
       expect(redisSession['csrf']).toBeDefined();
       expect(redisSession['user']).toBeDefined();
       expect(redisSession['user']).toEqual(user);
@@ -37,7 +36,7 @@ describe("RedisSession", () => {
   
       expect(redisSession).toBeDefined();
       expect(redisSession.Csrf).toBeDefined();
-      expect(redisSession.Id).toEqual(user.id);
+      expect(redisSession.Id).toBeDefined();
       expect(redisSession.User).toEqual(user);
     })
   });

@@ -1,6 +1,7 @@
 export class ValidationErrors extends Error {
   public statusCode = 422;
   public errors: Map<string, ValidationError> = new Map<string, ValidationError>;
+  // public erros: { [key: string]: ValidationError };
 
   constructor() {
     super("ValidationError");
@@ -15,14 +16,6 @@ export class ValidationErrors extends Error {
   }
 
   hasErrors(): boolean {
-    // Tiborov kod
-    // let hasErrors = false;
-
-    // for (const key in this.errors) {
-    //   hasErrors = this.errors.get(key)?.isEmpty() || false;
-    // }
-    // return hasErrors;
-
     for (const value of this.errors.values()) {
       if (!value.isEmpty()) {
         return true;

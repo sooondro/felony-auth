@@ -1,12 +1,11 @@
 import RedisAdapter from "../../../src/cache/redis/RedisAdapter";
-import PostgresAdapter from "../../../src/storage/postgres/PostgresAdapter";
 import AuthenticableUser from "../../../src/types/AuthenticableUser";
 
 describe("RedisAdapter", () => {
-  describe("createConnection", () => {
-    let redisAdapter: RedisAdapter;
-    const connectionString = "redis://localhost:6379";
+  let redisAdapter: RedisAdapter;
+  const connectionString = "redis://localhost:6379";
 
+  describe("createConnection", () => {
     beforeEach(() => {
       redisAdapter = new RedisAdapter();
       jest.spyOn(redisAdapter, "createConnection");
@@ -38,18 +37,15 @@ describe("RedisAdapter", () => {
   });
 
   describe("createSession", () => {
-    let redisAdapter: RedisAdapter;
-    const connectionString = "redis://localhost:6379";
-
-
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
       await redisAdapter.createConnection(connectionString);
       jest.spyOn(redisAdapter, "createSession");
     });
 
-    afterEach(() => {
+    afterEach(async () => {
       jest.resetAllMocks();
+      await redisAdapter['client'].flushAll();
       redisAdapter["client"].quit();
     });
 
@@ -83,23 +79,20 @@ describe("RedisAdapter", () => {
       const result = await redisAdapter.createSession(user);
 
       expect(redisAdapter.createSession).toHaveBeenCalledTimes(1);
-      expect(result).toEqual("1b0049e0-2155-4db4-a8f6-90006397fb1c");
+      expect(result).toBeDefined();
     });
   });
 
   describe("getSession", () => {
-    let redisAdapter: RedisAdapter;
-    const connectionString = "redis://localhost:6379";
-
-
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
       await redisAdapter.createConnection(connectionString);
       jest.spyOn(redisAdapter, "getSession");
     });
 
-    afterEach(() => {
+    afterEach(async () => {
       jest.resetAllMocks();
+      await redisAdapter['client'].flushAll();
       redisAdapter["client"].quit();
     });
 
@@ -121,19 +114,17 @@ describe("RedisAdapter", () => {
         email: "foo@bar.com"
       };
 
-      const result = await redisAdapter.getSession("1b0049e0-2155-4db4-a8f6-90006397fb1c");
+      const sessionId = await redisAdapter.createSession(user);
+
+      const result = await redisAdapter.getSession(sessionId);
 
       expect(redisAdapter.getSession).toHaveBeenCalledTimes(1);
-      expect(result.id).toEqual("1b0049e0-2155-4db4-a8f6-90006397fb1c");
+      expect(result.id).toBeDefined();
       expect(result.user).toEqual(user);
     });
   });
 
   describe("logout", () => {
-    let redisAdapter: RedisAdapter;
-    const connectionString = "redis://localhost:6379";
-
-
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
       await redisAdapter.createConnection(connectionString);
@@ -141,8 +132,9 @@ describe("RedisAdapter", () => {
       jest.spyOn(redisAdapter, "logout");
     });
 
-    afterEach(() => {
+    afterEach(async () => {
       jest.resetAllMocks();
+      await redisAdapter['client'].flushAll();
       redisAdapter["client"].quit();
     });
 
@@ -166,19 +158,16 @@ describe("RedisAdapter", () => {
   });
 
   describe("validateCSRF", () => {
-    let redisAdapter: RedisAdapter;
-    const connectionString = "redis://localhost:6379";
-
-
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
       await redisAdapter.createConnection(connectionString);
       jest.spyOn(redisAdapter, "validateCSRF");
-      
+
     });
 
-    afterEach(() => {
+    afterEach(async () => {
       jest.resetAllMocks();
+      await redisAdapter['client'].flushAll();
       redisAdapter["client"].quit();
     });
 
@@ -191,10 +180,10 @@ describe("RedisAdapter", () => {
         email: "foo@bar.com"
       };
 
-      await redisAdapter.createSession(user);
+      const sessionId = await redisAdapter.createSession(user);
 
       try {
-        await redisAdapter.validateCSRF(user.id, "foo");
+        await redisAdapter.validateCSRF(sessionId, "foo");
       } catch (error) {
         expect(redisAdapter.validateCSRF).toHaveBeenCalledTimes(1);
         expect(error).toEqual("Invalid CSRF token");
@@ -210,8 +199,8 @@ describe("RedisAdapter", () => {
         email: "foo@bar.com"
       };
 
-      await redisAdapter.createSession(user);
-      const session = await redisAdapter.getSession(user.id);
+      const sessionId = await redisAdapter.createSession(user);
+      const session = await redisAdapter.getSession(sessionId);
       await redisAdapter.validateCSRF(session.id, session.csrf);
       await redisAdapter.createSession(user);
 

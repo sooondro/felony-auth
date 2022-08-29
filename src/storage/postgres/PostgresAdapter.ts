@@ -1,6 +1,11 @@
 import { Sequelize, DataTypes } from 'sequelize';
 import Bcrypt from 'bcrypt';
 
+import Authentication from '../../Authentication';
+import Models from "./db/models/Models";
+import { ValidationErrors } from '../../error/ValidationError';
+
+import StorageAdapterInterface from "../StorageAdapterInterface";
 import RegistrationData from "../../types/RegistrationData";
 import LoginData from '../../types/LoginData';
 import PostgresConnectionData from "../../types/PostgresConnectionData";
@@ -8,19 +13,7 @@ import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 import AuthenticableUser from "../../types/AuthenticableUser";
 import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 
-// import User from "./models/User";
-// import TwoFactorUser from "./models/TwoFactorUser";
 
-// import db from "./db/models";
-// const DB: any = db;
-// const { User, TwoFactorUser } = DB;
-// import from "./db/models/user";
-
-import Models from "./db/models/Models";
-
-import StorageAdapterInterface from "../StorageAdapterInterface";
-import Authentication from '../../Authentication';
-import { ValidationErrors } from '../../error/ValidationError';
 
 /**
  * Storage adapter for the Postgres database
@@ -30,19 +23,6 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   private client!: Sequelize;
   private authentication!: Authentication; //PITANJE ? ili !
   public models!: Models;
-
-  // constructor( // PITANJE izbacio, postavlja se pomocu metoda
-  //   config: {
-  //     connectionUri?: string,
-  //     connectionData?: PostgresConnectionData
-  //   }
-  // ) {
-  //   if (config.connectionUri) {
-  //     this.setupPostgresConnectionWithConnectionUri(config.connectionUri)
-  //   } else if (config.connectionData) {
-  //     this.setupPostgresConnectionWithConnectionData(config.connectionData);
-  //   }
-  // }
 
   public get Client(): Sequelize {
     return this.client;
@@ -69,11 +49,9 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       host: config.host,
       port: config.port,
       logging: false,
-      // models: [User, TwoFactorUser],
     });
 
     this.models = new Models(this.client, DataTypes);
-    // await this.client.authenticate();
   }
 
   /**
@@ -85,11 +63,10 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   async setupPostgresConnectionWithConnectionUri(connectionUri: string) {
     this.client = new Sequelize(connectionUri), { 
       dialect: "postgres",  
-      logging: false 
+      logging: false
     };
 
     this.models = new Models(this.client, DataTypes);
-    // await this.client.authenticate();
   }
 
   /**
