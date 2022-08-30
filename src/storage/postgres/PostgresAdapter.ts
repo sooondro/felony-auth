@@ -13,10 +13,8 @@ import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 import AuthenticableUser from "../../types/AuthenticableUser";
 import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 
-
-
 /**
- * Storage adapter for the Postgres database
+ * Storage adapter for the Postgres database.
  */
 export default class PostgresAdapter implements StorageAdapterInterface {
 
@@ -225,7 +223,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Fetch two-factor user by AuthenticableUser object
+   * Fetch two-factor user by AuthenticableUser object.
    * 
    * @param {AuthenticableUser} user 
    * @return {AuthenticableTwoFactorUser}

@@ -17,7 +17,7 @@ export default interface ErrorAdapterInterface {
   initialize(authentication: Authentication): void;
 
   /**
-   * Error handler function
+   * Error handler function.
    * 
    * @param {string | ErrorData | Error | AuthenticationError | ValidationErrors} error 
    */

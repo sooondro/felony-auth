@@ -38,11 +38,13 @@ export default (sequelize: any, DataTypes: any): any => {
       validate: {
         isUUID: 4,
         notEmpty: true,
+        notNull: true,
       }
     },
     userId: {
       type: DataTypes.UUID,
       field: 'user_id',
+      allowNull: false,
       references: {
         model: 'user',
         key: 'id',
@@ -50,20 +52,23 @@ export default (sequelize: any, DataTypes: any): any => {
       validate: {
         isUUID: 4,
         notEmpty: true,
+        notNull: true,
       }
     },
     secret: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true
+        notEmpty: true,
+        notNull: true,
       }
     },
     provider: {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: true
+        notEmpty: true,
+        notNull: true
       }
     },
     createdAt: {
