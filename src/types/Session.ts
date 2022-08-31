@@ -5,7 +5,7 @@ import AuthenticableUser from "./AuthenticableUser";
  */
 type Session = {
   /**
-   * Session's ID.
+   * User's ID.
    */
   id: string,
 

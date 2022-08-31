@@ -26,6 +26,11 @@ type PostgresConnectionData = {
    * Database port number.
    */
   port: number,
+
+  /**
+   * SQL dialect.
+   */
+  dialect: string,
 };
 
 export default PostgresConnectionData;

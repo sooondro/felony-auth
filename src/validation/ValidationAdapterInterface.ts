@@ -1,6 +1,7 @@
 // import ErrorAdapterInterface from "../error/ErrorAdapterInterface";
 import RegistrationData from "../types/RegistrationData";
 import LoginData from "../types/LoginData";
+import Authentication from "../Authentication";
 
 /**
  * Validation adapter interface.
@@ -8,6 +9,13 @@ import LoginData from "../types/LoginData";
  * @type {Interface}
  */
 export default interface ValidationAdapterInterface {
+  /**
+   * Used for injecting Authentication class into the adapter.
+   * 
+   * @param {Authentication} authentication 
+   */
+  initialize(authentication: Authentication): void;
+
   /**
    * Validate registration data.
    * 

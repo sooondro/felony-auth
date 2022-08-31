@@ -1,9 +1,9 @@
 import { createClient } from "redis";
-
-import RedisSession from "./RedisSession";
+import { RedisClientType } from "@redis/client";
 
 import CacheAdapterInterface from "../CacheAdapterInterface";
-import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
+import Authentication from "../../Authentication";
+import RedisSession from "./RedisSession";
 import AuthenticableUser from "../../types/AuthenticableUser";
 import Session from "../../types/Session";
 
@@ -12,15 +12,30 @@ import Session from "../../types/Session";
  */
 export default class RedisAdapter implements CacheAdapterInterface {
 
-	constructor(private errorAdapter: ErrorAdapterInterface, url: string) {
+	private client!: RedisClientType; // PITANJE
+	private authentication!: Authentication;
+
+	/**
+	 * Used for injecting Authentication class into the adapter.
+	 * 
+	 * @param {Authentication} authentication 
+	 */
+	initialize(authentication: Authentication): void {
+		this.authentication = authentication;
+	}
+
+	/**
+	 * Used for connecting to redis.
+	 * 
+	 * @param {string} url 
+	 */
+	async createConnection(url: string): Promise<void> {
 		this.client = createClient({
 			url,
 		});
 
-		this.client.connect();
+		await this.client.connect();
 	}
-
-	private client;
 
 	/**
 	 * Create redis session.
@@ -30,12 +45,8 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	 */
 	async createSession(payload: AuthenticableUser): Promise<string> {
 		const session = new RedisSession(payload);
-		const sessionValue = {
-			csrf: session.csrf,
-			user: session.user,
-		}
-		await this.client.set(session.id, sessionValue);
-		return session.id;
+		await this.client.set(session.Id, JSON.stringify(session));
+		return session.Id;
 	}
 
 	/**
@@ -47,10 +58,12 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	async getSession(id: string): Promise<Session> {
 		const session = await this.client.get(id);
 		if (!session) {
-			this.errorAdapter.throwSessionAdapterError(new Error("Session not found"));
+			throw "Session not found";
 		}
 
-		return session;
+		const parsedSession: Session = JSON.parse(session);
+
+		return parsedSession;
 	}
 
 	/**
@@ -58,7 +71,7 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	 * 
 	 * @param {string} id 
 	 */
-	async logout(id: string) {
+	async logout(id: string): Promise<void> {
 		await this.client.del(id);
 	}
 
@@ -71,7 +84,7 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	async validateCSRF(sessionId: string, token: string): Promise<void> {
 		const session = await this.getSession(sessionId);
 		if (session.csrf !== token) {
-			this.errorAdapter.throwCSRFError(new Error("Invalid CSRF token"));
+			throw "Invalid CSRF token";
 		}
 	}
 }

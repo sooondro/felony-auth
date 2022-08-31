@@ -8,9 +8,9 @@ type AuthenticableTwoFactorUser = {
   id: string,
 
   /**
-   * Two-facotr user's email.
+   * User's id.
    */
-  email: string,
+  userId: string,
 
   /**
    * Two-factor provider.

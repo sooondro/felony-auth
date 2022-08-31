@@ -1,6 +1,11 @@
-import { Sequelize, Repository } from 'sequelize-typescript';
+import { Sequelize, DataTypes } from 'sequelize';
 import Bcrypt from 'bcrypt';
 
+import Authentication from '../../Authentication';
+import Models from "./db/models/Models";
+import { ValidationErrors } from '../../error/ValidationError';
+
+import StorageAdapterInterface from "../StorageAdapterInterface";
 import RegistrationData from "../../types/RegistrationData";
 import LoginData from '../../types/LoginData';
 import PostgresConnectionData from "../../types/PostgresConnectionData";
@@ -8,261 +13,256 @@ import TwoFactorRegistrationData from "../../types/TwoFactorRegistrationData";
 import AuthenticableUser from "../../types/AuthenticableUser";
 import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 
-import User from "./models/User";
-import TwoFactorUser from "./models/TwoFactorUser";
-
-import ErrorAdapterInterface from "../../error/ErrorAdapterInterface";
-import StorageAdapterInterface from "../StorageAdapterInterface";
-
-
+/**
+ * Storage adapter for the Postgres database.
+ */
 export default class PostgresAdapter implements StorageAdapterInterface {
 
-  private client: Sequelize;
-  private userRepository: Repository<User>;
-  private twoFactorUserRepository: Repository<TwoFactorUser>;
-  private errorAdapter: ErrorAdapterInterface;
+  private client!: Sequelize;
+  private authentication!: Authentication; //PITANJE ? ili !
+  public models!: Models;
 
-  constructor(
-    errorAdapter: ErrorAdapterInterface,
-    connectionUri: string,
-    // config?: PostgresConnectionData,
-  ) {
-    this.errorAdapter = errorAdapter;
-
-    this.setupPostgresConnectionWithUri(connectionUri)
-    // if (config) this.setupPostgresConnectionWithConfig(config);
-    // else this.setupPostgresConnectionWithUri(connectionUri)
+  public get Client(): Sequelize {
+    return this.client;
   }
 
   /**
-   * Set up Postgres client with the config object
+   * Used for injecting Authentication class into the adapter.
+   * 
+   * @param {Authentication} authentication 
+   */
+  initialize(authentication: Authentication): void {
+    this.authentication = authentication;
+  }
+
+  /**
+   * Set up Postgres client with the config object.
    * 
    * @param {PostgresConnectionData} config 
    * @throws
    */
-  async setupPostgresConnectionWithConfig(config: PostgresConnectionData) {
-    this.client = new Sequelize(
-      {
-        host: 'localhost',
-        port: config.port,
-        database: config.database,
-        dialect: 'postgres',
-        username: config.username,
-        password: config.password,
-        models: [User, TwoFactorUser],
-        repositoryMode: true,
-      },
-    );
+  async setupPostgresConnectionWithConnectionData(config: PostgresConnectionData) {
+    this.client = new Sequelize(config.database, config.username, config.password, {
+      dialect: 'postgres',
+      host: config.host,
+      port: config.port,
+      logging: false,
+    });
 
-    await this.authenticateConnection();
+    this.models = new Models(this.client, DataTypes);
   }
 
   /**
-   * Set up Postgres client with connection string
+   * Set up Postgres client with connection string.
    * 
-   * @param {string} connectionUri 
+   * @param {string} connectionUri
    * @throws
    */
-  async setupPostgresConnectionWithUri(connectionUri: string) {
-    this.client = new Sequelize(
-      connectionUri,
-      {
-        models: [User, TwoFactorUser],
-        repositoryMode: true,
-      }
-    );
+  async setupPostgresConnectionWithConnectionUri(connectionUri: string) {
+    this.client = new Sequelize(connectionUri), { 
+      dialect: "postgres",  
+      logging: false
+    };
 
-    await this.authenticateConnection();
+    this.models = new Models(this.client, DataTypes);
   }
 
   /**
-   * Authenticate Postgres client connection
-   * @throws 
-   */
-  async authenticateConnection() {
-    try {
-      await this.client.authenticate();
-      this.userRepository = this.client.getRepository(User);
-      this.twoFactorUserRepository = this.client.getRepository(TwoFactorUser);
-
-    } catch (error) {
-      this.errorAdapter.throwStorageConnectionError(error);
-    }
-  }
-
-  /**
-   * Add new user to the database
+   * Add new user to the database.
    * 
    * @param {RegistrationData} payload 
    * @return {Promise<AuthenticableUser>}
    * @throws
    */
-  async register(payload: RegistrationData): Promise<AuthenticableUser | void> {
-    try {
-      const hashedPassword = await Bcrypt.hash(payload.password, 12);
+  async register(payload: RegistrationData): Promise<AuthenticableUser> {
+    const hashedPassword = await Bcrypt.hash(payload.password, 12);
 
-      const [user, created] = await this.userRepository.findOrCreate({
-        where: { email: payload.email },
-        defaults: {
-          username: payload.username,
-          firstName: payload.firstName,
-          lastName: payload.lastName,
-          email: payload.email,
-          password: hashedPassword,
-        }
-      });
-
-      if (!created) {
-        throw new Error("User already exists");
+    const [user, created] = await this.models.User.findOrCreate({
+      where: { email: payload.email },
+      defaults: {
+        username: payload.username,
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+        password: hashedPassword,
       }
+    });
 
-      return user as AuthenticableUser;
-    } catch (error) {
-      this.errorAdapter.throwRegistrationError(error);
+    if (!created) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
   }
 
   /**
-   * Login user
+   * Register two-factor user.
    * 
-   * @param {LoginData} payload 
-   * @return {Promise<User>}
-   * @throws
-   */
-  async login(payload: LoginData): Promise<AuthenticableUser | void> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email: payload.email }
-      });
-
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
-
-      const result = await Bcrypt.compare(payload.password, user.password);
-      if (!result) {
-        throw new Error("Wrong email or password");
-      }
-
-      return user as AuthenticableUser;
-    } catch (error) {
-      this.errorAdapter.throwLoginError(error);
-    }
-  }
-
-  /**
-   * Fetch user from the database by email
-   * 
-   * @param {string} email 
-   * @return {Promise<User>}
-   * @throws 
-   */
-  async getUserByEmail(email: string): Promise<AuthenticableUser | void> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email: email }
-      });
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
-
-      return user as AuthenticableUser;
-    } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
-    }
-  }
-
-  /**
-   * Fetch user from the database by id
-   * 
-   * @param {string} id 
-   * @return {Promise<User>}
-   * @throws Login Error
-   */
-  async getUserById(id: string): Promise<AuthenticableUser | void> {
-    try {
-      const user = await this.userRepository.findByPk(id);
-      if (!user) {
-        throw new Error("No user found with the given ID");
-      }
-
-      return user as AuthenticableUser;
-    } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
-    }
-  }
-
-  /**
-   * Fetch user from the database by username
-   * 
-   * @param {string} username 
-   * @return {Promise<User>}
-   */
-  async getUserByUsername(username: string): Promise<AuthenticableUser | void> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { username: username }
-      });
-
-      if (!user) {
-        throw new Error("No user found with the given username");
-      }
-
-      return user as AuthenticableUser;
-    } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
-    }
-  }
-
-  /**
-   * Register two-factor user
-   * 
-   * @param {TwoFactorRegistrationData} twoFactorUser 
+   * @param {TwoFactorRegistrationData} payload 
    * @return {Promise<AuthenticableTwoFactorUser>}
    * @throws
    */
-  async registerTwoFactorUser(twoFactorUser: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser | void> {
-    try {
-      const [user, created] = await this.twoFactorUserRepository.findOrCreate({
-        where: { email: twoFactorUser.email },
-        defaults: {
-          email: twoFactorUser.email,
-          provider: twoFactorUser.provider,
-          secret: twoFactorUser.secret,
-        }
-      });
-
-      if (!created) {
-        throw new Error("Two factor user already exists");
+  async registerTwoFactorUser(payload: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser> {
+    const [user, created] = await this.models.TwoFactorUser.findOrCreate({
+      where: { userId: payload.userId, provider: payload.provider },
+      defaults: {
+        userId: payload.userId,
+        provider: payload.provider,
+        secret: payload.secret,
       }
+    });
 
-      return user as AuthenticableTwoFactorUser;
-    } catch (error) {
-      this.errorAdapter.throwTwoFactorRegistrationError(error);
+    if (!created) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("id", "invalid credentials"); // PITANJE
+      throw validationErrors;
     }
+
+    const authUser: AuthenticableTwoFactorUser = user;
+
+    return authUser;
   }
 
   /**
-   * Fetch two-factor user from the database by email.
+   * Login user.
+   * 
+   * @param {LoginData} payload 
+   * @return {Promise<AuthenticableUser>}
+   * @throws
+   */
+  async login(payload: LoginData): Promise<AuthenticableUser> {
+    const user = await this.models.User.findOne({
+      where: { email: payload.email }
+    });
+
+    if (!user) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
+    }
+
+    const result = await Bcrypt.compare(payload.password, user.password);
+
+    if (!result) {
+      throw "Invalid credentials!";
+    }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Fetch user from the database by email.
    * 
    * @param {string} email 
-   * @return {Promise<TwoFactorUser>}
+   * @return {Promise<AuthenticableUser>}
+   * @throws 
    */
-  async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser | void> {
-    try {
-      const user = await this.twoFactorUserRepository.findOne({
-        where: { email: email }
-      });
+  async getUserByEmail(email: string): Promise<AuthenticableUser> {
+    const user = await this.models.User.findOne({
+      where: { email: email }
+    });
 
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
-
-      return user as AuthenticableTwoFactorUser;
-    } catch (error) {
-      this.errorAdapter.throwTwoFactorProviderError(error);
+    if (!user) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
   }
+
+  /**
+   * Fetch user from the database by id.
+   * 
+   * @param {string} id 
+   * @return {Promise<AuthenticableUser>}
+   * @throws Login Error
+   */
+  async getUserById(id: string): Promise<AuthenticableUser> {
+    const user = await this.models.User.findByPk(id);
+
+    if (!user) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("id", "invalid credentials");
+      throw validationErrors;
+    }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Fetch user from the database by username.
+   * 
+   * @param {string} username 
+   * @return {Promise<AuthenticableUser>}
+   */
+  async getUserByUsername(username: string): Promise<AuthenticableUser> {
+    const user = await this.models.User.findOne({
+      where: { username: username }
+    });
+
+    if (!user) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("username", "invalid credentials");
+      throw validationErrors;
+    }
+
+    const authUser: AuthenticableUser = user;
+
+    return authUser;
+  }
+
+  /**
+   * Fetch two-factor user by AuthenticableUser object.
+   * 
+   * @param {AuthenticableUser} user 
+   * @return {AuthenticableTwoFactorUser}
+   */
+  async getTwoFactorUser(user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
+    const twoFactorUser: AuthenticableTwoFactorUser = await this.models.TwoFactorUser.findOne({
+      where: { userId: user.id }
+    });
+
+    if (!twoFactorUser) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("id", "invalid credentials");
+      throw validationErrors;
+    }
+
+    return twoFactorUser;
+  }
+
+  // /**
+  //  * Fetch two-factor user from the database by email.
+  //  * 
+  //  * @param {string} email 
+  //  * @return {Promise<AuthenticableTwoFactorUser>}
+  //  */
+  // async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
+  //   const user = await this.models.TwoFactorUser.findOne({
+  //     where: { email: email }
+  //   });
+
+  //   if (!user) {
+  //     const validationErrors = new ValidationErrors();
+  //     validationErrors.addError("email", "invalid credentials");
+  //     throw validationErrors;
+  //   }
+
+  //   const authUser: AuthenticableTwoFactorUser = user;
+
+  //   return authUser;
+  // }
 
   /**
    * Change user's password.
@@ -270,30 +270,31 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @param {string} email 
    * @param {string} oldPassword 
    * @param {string} newPassword 
+   * @return {Promise<void>}
    */
   async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
-    try {
-      const user = await this.userRepository.findOne({
-        where: { email: email }
-      });
-      if (!user) {
-        throw new Error("No user found with the given email");
-      }
+    const user = await this.models.User.findOne({
+      where: { email: email }
+    });
 
-      const result = await Bcrypt.compare(oldPassword, user.password);
-      if (!result) {
-        throw new Error("Wrong email or password");
-      }
-
-      const newHashedPassword = await Bcrypt.hash(newPassword, 12);
-
-      await this.userRepository.update(
-        { password: newHashedPassword },
-        { where: { email: email } }
-      );
-    } catch (error) {
-      this.errorAdapter.throwStorageAdapterError(error);
+    if (!user) {
+      const validationErrors = new ValidationErrors();
+      validationErrors.addError("email", "invalid credentials");
+      throw validationErrors;
     }
+
+    const result = await Bcrypt.compare(oldPassword, user.password);
+
+    if (!result) {
+      throw "Invalid credentials!";
+    }
+
+    const newHashedPassword = await Bcrypt.hash(newPassword, 12);
+
+    await this.models.User.update(
+      { password: newHashedPassword },
+      { where: { email: email } }
+    );
   }
 }
 

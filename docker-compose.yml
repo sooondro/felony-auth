@@ -1,0 +1,16 @@
+version: "3.9"
+services:
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespw
+      POSTGRES_DB: felony_auth_test
+    ports:
+      - 5432:5432
+  cache:
+    image: redis
+    restart: always
+    ports:
+      - 6379:6379
