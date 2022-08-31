@@ -19,7 +19,7 @@ import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
 export default class PostgresAdapter implements StorageAdapterInterface {
 
   private client!: Sequelize;
-  private authentication!: Authentication; //PITANJE ? ili !
+  private authentication!: Authentication;
   public models!: Models;
 
   public get Client(): Sequelize {
@@ -118,7 +118,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
     if (!created) {
       const validationErrors = new ValidationErrors();
-      validationErrors.addError("id", "invalid credentials"); // PITANJE
+      validationErrors.addError("provider", "invalid credentials"); // PITANJE sto da baca
       throw validationErrors;
     }
 

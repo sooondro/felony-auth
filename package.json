@@ -4,10 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "make-user-model": "npx sequelize-cli model:generate --name user --attributes username:string,first_name:string,last_name:string,email:string,password:string",
-    "make-two-factor-user-model": "npx sequelize-cli model:generate --name two_factor_user --attributes secret:string,provider:string",
+    "make-user-model": "NODE_ENV=test npx sequelize-cli model:generate --name user --attributes username:string,first_name:string,last_name:string,email:string,password:string",
+    "make-two-factor-user-model": "NODE_ENV=test npx sequelize-cli model:generate --name two_factor_user --attributes secret:string,provider:string",
     "migrate": "NODE_ENV=test npx sequelize-cli db:migrate",
-    "migrate-down": "npx sequelize-cli db:migrate:undo",
+    "migrate-down": "NODE_ENV=test npx sequelize-cli db:migrate:undo",
     "migrate-down-all": "NODE_ENV=test npx sequelize-cli db:migrate:undo:all",
     "jest-clear": "npx jest --clearCache",
     "test": "jest --detectOpenHandles"
@@ -15,9 +15,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/qrcode": "^1.4.2",
-    "@types/sequelize": "^4.28.14",
-    "@types/uuid": "^8.3.4",
     "bcrypt": "^5.0.1",
     "otplib": "^12.0.1",
     "pg": "^8.8.0",
@@ -32,6 +29,9 @@
     "@types/bcrypt": "^5.0.0",
     "@types/jest": "^28.1.7",
     "@types/node": "^18.0.3",
+    "@types/qrcode": "^1.5.0",
+    "@types/sequelize": "^4.28.14",
+    "@types/uuid": "^8.3.4",
     "@types/validator": "^13.7.4",
     "@typescript-eslint/eslint-plugin": "^5.33.0",
     "@typescript-eslint/parser": "^5.33.0",

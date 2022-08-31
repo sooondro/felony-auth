@@ -20,48 +20,39 @@ export default class Authentication {
 	private globalAuthConfig!: object;
 	private cacheAdapter!: CacheAdapterInterface;
 	private twoFactorProvider!: TwoFactorProviderInterface;
+	// TODO get back to this when we add multiple twoFactorProviders
 	// private twoFactorProviders: Map<string, TwoFactorProviderInterface>;
 
 	public get ErrorAdapter() {
 		return this.errorAdapter;
 	}
 	public set ErrorAdapter(errorAdapter: ErrorAdapterInterface) {
-		if (typeof errorAdapter.initialize === "function") {
-			errorAdapter.initialize(this);
-		}
+		errorAdapter.initialize(this);
 		this.errorAdapter = errorAdapter;
 	}
 	public get ValidationAdapter() {
 		return this.validationAdapter;
 	}
 	public set ValidationAdapter(validationAdapter: ValidationAdapterInterface) {
-		if (typeof validationAdapter.initialize === "function") {
-			validationAdapter.initialize(this);
-		}
+		validationAdapter.initialize(this);
 		this.validationAdapter = validationAdapter;
 	}
 	public get StorageAdapter() {
 		return this.storageAdapter;
 	}
 	public set StorageAdapter(storageAdapter: StorageAdapterInterface) {
-		if (typeof storageAdapter.initialize === "function") {
-			storageAdapter.initialize(this);
-		}
+		storageAdapter.initialize(this);
 		this.storageAdapter = storageAdapter;
 	}
 	public get CacheAdapter() {
 		return this.cacheAdapter;
 	}
 	public set CacheAdapter(cacheAdapter: CacheAdapterInterface) {
-		if (typeof cacheAdapter.initialize === "function") {
-			cacheAdapter.initialize(this);
-		}
+		cacheAdapter.initialize(this);
 		this.cacheAdapter = cacheAdapter;
 	}
 	public set TwoFactorProvider(twoFactorProvider: TwoFactorProviderInterface) {
-		if (typeof twoFactorProvider.initialize === "function") {
-			twoFactorProvider.initialize(this);
-		}
+		twoFactorProvider.initialize(this);
 		this.twoFactorProvider = twoFactorProvider;
 	}
 	public get TwoFactorProvider() {
@@ -70,6 +61,8 @@ export default class Authentication {
 	public get GlobalAuthConfig() {
 		return this.globalAuthConfig;
 	}
+
+	// TODO get back to this when we add multiple twoFactorProviders
 	// public set twoFactorProvider(twoFactorProvider: TwoFactorProviderInterface) {
 	// 	this.twoFactorProviders.set(twoFactorProvider.provider, twoFactorProvider);
 	// }
@@ -89,20 +82,10 @@ export default class Authentication {
 	async register(payload: RegistrationData)
 		: Promise<{ user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string }> {
 		try {
-			const result: { user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string } = {
-				user: {
-					id: "",
-					username: "",
-					firstName: "",
-					lastName: "",
-					email: ""
-				}
-			};
-
 			this.validationAdapter.registration(payload);
 
 			const user = await this.storageAdapter.register(payload);
-			result.user = user;
+			const result: { user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string } = { user };
 
 			if (payload.twoFactorAuthentication) {
 				const { twoFactorUser, qrCode } = await this.registerTwoFactorUser(user);
@@ -253,7 +236,7 @@ export default class Authentication {
 	 * 
 	 * @param {AuthenticableUser} payload 
 	 */
-	async createSession(payload: AuthenticableUser): Promise<string> { //PITANJE dodati provjere je li user postoji?
+	async createSession(payload: AuthenticableUser): Promise<string> {
 		try {
 			return await this.cacheAdapter.createSession(payload);
 		} catch (error: any) {
@@ -261,7 +244,6 @@ export default class Authentication {
 			throw this.errorAdapter.handleError(err);
 		}
 	}
-
 
 	/**
 	 * Change user's password.
@@ -284,7 +266,7 @@ export default class Authentication {
 	 * @param {AuthenticableUser} user 
 	 * @return {Promise<AuthenticableTwoFactorUser>}
 	 */
-	async getTwoFactorUser(user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> { //PITANJE koristit ovo ili direktno pozivat
+	async getTwoFactorUser(user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
 		try {
 			return await this.storageAdapter.getTwoFactorUser(user);
 		} catch (error: any) {
@@ -292,20 +274,4 @@ export default class Authentication {
 			throw this.errorAdapter.handleError(err);
 		}
 	}
-
-	// async getUserById(id: string): Promise<void> { //PITANJE omogucit da iz ove klase imaju getter metode
-	// 	try {
-	// 		await this.databaseProvider.getUserById(id);
-	// 	} catch (error) {
-	// 		throw error;
-	// 	}
-	// }
-
-	// async getUserByEmail(email: string): Promise<void> {
-	// 	try {
-	// 		await this.databaseProvider.getUserByemail(email);
-	// 	} catch (error) {
-	// 		throw error;
-	// 	}
-	// }
 }

@@ -47,7 +47,7 @@ describe("DefaultErrorAdapter", () => {
     it("should return the same ValidationErrors instance if it was provided as a parameter", () => {
       const error = new ValidationErrors();
 
-      const result: ValidationErrors = errorAdapter.handleError(error) as ValidationErrors; // PITANJE
+      const result: ValidationErrors = errorAdapter.handleError(error) as ValidationErrors;
 
       expect(errorAdapter.handleError).toHaveBeenCalledTimes(1);
       expect(result).toBeInstanceOf(ValidationErrors);

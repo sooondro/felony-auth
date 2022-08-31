@@ -913,14 +913,12 @@ describe("Authentication", () => {
       await authentication.logout(sessionId);
 
       try {
-        const session = await authentication.getSession(sessionId);
+        const session = await authentication.CacheAdapter.getSession(sessionId);
 
       } catch (error) {
         expect(authentication.logout).toHaveBeenCalledTimes(1);
         expect(authentication.CacheAdapter.logout).toHaveBeenCalledTimes(1); 
-        // expect(authentication.ErrorAdapter.handleError).toHaveBeenCalledTimes(1); // PITANJE
         expect(error).toEqual("Session not found");
-        // expect(error).toBeInstanceOf(AuthenticationError)
       }
     });
   });

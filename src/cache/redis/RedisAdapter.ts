@@ -12,7 +12,7 @@ import Session from "../../types/Session";
  */
 export default class RedisAdapter implements CacheAdapterInterface {
 
-	private client!: RedisClientType; // PITANJE
+	private client!: RedisClientType;
 	private authentication!: Authentication;
 
 	/**
@@ -29,7 +29,7 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	 * 
 	 * @param {string} url 
 	 */
-	async createConnection(url: string): Promise<void> {
+	async createConnection(url: string): Promise<void> { // DA da napravim isto kao i kod postgres 2 metode, connect with url i connect with data
 		this.client = createClient({
 			url,
 		});

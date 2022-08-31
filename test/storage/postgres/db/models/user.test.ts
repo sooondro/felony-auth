@@ -2,7 +2,7 @@ import { Sequelize, ValidationError } from "sequelize";
 import PostgresAdapter from "../../../../../src/storage/postgres/PostgresAdapter";
 import mockdate from 'mockdate';
 
-describe.only("user", () => {
+describe("user", () => {
   const postgresAdapter = new PostgresAdapter();
 
   beforeEach(async () => {

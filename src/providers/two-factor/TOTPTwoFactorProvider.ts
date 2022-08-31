@@ -30,7 +30,7 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
    * @param {AuthenticableUser} user 
    * @returns 
    */
-  register(user: AuthenticableUser): TwoFactorRegistrationData { //PITANJE jel treba provjera jel user postoji
+  register(user: AuthenticableUser): TwoFactorRegistrationData {
     const secret = authenticator.generateSecret();
 
     const userData: TwoFactorRegistrationData = {
