@@ -23,6 +23,9 @@ export default class Authentication {
 	// TODO get back to this when we add multiple twoFactorProviders
 	// private twoFactorProviders: Map<string, TwoFactorProviderInterface>;
 
+	// PITANJE
+	// pri login napravit provjeru je li user ima 2fa, ako ima, natjerat da radi 2fa DA
+
 	public get ErrorAdapter() {
 		return this.errorAdapter;
 	}

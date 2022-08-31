@@ -17,11 +17,13 @@ import AuthenticableTwoFactorUser from "../../types/AuthenticableTwoFactorUser";
  * Storage adapter for the Postgres database.
  */
 export default class PostgresAdapter implements StorageAdapterInterface {
-
   private client!: Sequelize;
   private authentication!: Authentication;
   public models!: Models;
 
+  /**
+   * Getter method for Postgres client.
+   */
   public get Client(): Sequelize {
     return this.client;
   }
@@ -36,12 +38,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Set up Postgres client with the config object.
+   * Set up Postgres connection with the config object.
    * 
    * @param {PostgresConnectionData} config 
    * @throws
    */
-  async setupPostgresConnectionWithConnectionData(config: PostgresConnectionData) {
+  async setupConnectionWithConnectionData(config: PostgresConnectionData) {
     this.client = new Sequelize(config.database, config.username, config.password, {
       dialect: 'postgres',
       host: config.host,
@@ -53,13 +55,13 @@ export default class PostgresAdapter implements StorageAdapterInterface {
   }
 
   /**
-   * Set up Postgres client with connection string.
+   * Set up Postgres connection with the config object.
    * 
-   * @param {string} connectionUri
+   * @param {string} connectionUrl
    * @throws
    */
-  async setupPostgresConnectionWithConnectionUri(connectionUri: string) {
-    this.client = new Sequelize(connectionUri), { 
+  async setupConnectionWithConnectionUrl(connectionUrl: string) {
+    this.client = new Sequelize(connectionUrl), { 
       dialect: "postgres",  
       logging: false
     };
@@ -118,7 +120,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
     if (!created) {
       const validationErrors = new ValidationErrors();
-      validationErrors.addError("provider", "invalid credentials"); // PITANJE sto da baca
+      validationErrors.addError("provider", "user with the given provider already exists"); 
       throw validationErrors;
     }
 
@@ -138,6 +140,12 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     const user = await this.models.User.findOne({
       where: { email: payload.email }
     });
+
+    // { //TODO
+    //   include: {
+    //     model: this.models.TwoFactorUser;
+    //   }
+    // }
 
     if (!user) {
       const validationErrors = new ValidationErrors();

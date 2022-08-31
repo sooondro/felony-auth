@@ -6,6 +6,7 @@ import Authentication from "../../Authentication";
 import RedisSession from "./RedisSession";
 import AuthenticableUser from "../../types/AuthenticableUser";
 import Session from "../../types/Session";
+import RedisConnectionData from "../../types/RedisConnectionData";
 
 /**
  * Redis adapter.
@@ -25,13 +26,27 @@ export default class RedisAdapter implements CacheAdapterInterface {
 	}
 
 	/**
-	 * Used for connecting to redis.
+	 * Set up Redis connection with the config object.
 	 * 
 	 * @param {string} url 
 	 */
-	async createConnection(url: string): Promise<void> { // DA da napravim isto kao i kod postgres 2 metode, connect with url i connect with data
+	async setupConnectionWithConnectionUrl(url: string): Promise<void> {
 		this.client = createClient({
 			url,
+		});
+
+		await this.client.connect();
+	}
+
+	/**
+ 	 * Set up Redis connection with the config object.
+ 	 * 
+ 	 * @param {RedisConnectionData} config
+ 	 */
+	async setupConnectionWithConnectionData(config: RedisConnectionData): Promise<void> {
+		this.client = createClient({
+			socket: config.socket,
+			password: config.password,
 		});
 
 		await this.client.connect();

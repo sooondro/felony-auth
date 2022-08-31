@@ -20,23 +20,6 @@ describe("TOTPTwoFactorProvider", () => {
       jest.resetAllMocks();
     });
 
-    // it("should", () => {
-    //   const user: AuthenticableUser = {
-    //     id: "",
-    //     username: "",
-    //     firstName: "",
-    //     lastName: "",
-    //     email: ""
-    //   };
-
-    //   const registrationData = twoFactorProvider.register(user);
-    //   console.log(registrationData);
-
-
-    //   expect(twoFactorProvider.register).toHaveBeenCalledTimes(1);
-
-    // });
-
     it("should return a TwoFactorRegistrationData object when valid data is provided", () => {
       const user: AuthenticableUser = {
         id: "1b0049e0-2155-4db4-a8f6-90006397fb1c", // randomly generate UUIDV4
