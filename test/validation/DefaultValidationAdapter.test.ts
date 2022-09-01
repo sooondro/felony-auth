@@ -31,8 +31,7 @@ describe("DefaultValidationAdapter", () => {
         firstName: "testko",
         lastName: "testic",
         email: "invalid",
-        password: "password",
-        twoFactorAuthentication: false
+        password: "password"
       };
   
       // vako testiras kad nesto throwa ili opcenito kad testiras throwanje
@@ -57,8 +56,7 @@ describe("DefaultValidationAdapter", () => {
         firstName: "testko",
         lastName: "testic",
         email: "test@test.com",
-        password: "pass",
-        twoFactorAuthentication: false
+        password: "pass"
       };
   
       try {
@@ -82,8 +80,7 @@ describe("DefaultValidationAdapter", () => {
         firstName: "testko",
         lastName: "testic",
         email: "invalid",
-        password: "pass",
-        twoFactorAuthentication: false
+        password: "pass"
       };
   
       try {
@@ -108,8 +105,7 @@ describe("DefaultValidationAdapter", () => {
         firstName: "testko",
         lastName: "testic",
         email: "test@test.com",
-        password: "password",
-        twoFactorAuthentication: false
+        password: "password"
       };
   
       validationAdapter.registration(payload);
@@ -145,7 +141,6 @@ describe("DefaultValidationAdapter", () => {
       const payload: LoginData = {
         email: "invalid",
         password: "password",
-        twoFactorAuthentication: false
       };
   
       // vako testiras kad nesto throwa ili opcenito kad testiras throwanje
@@ -168,7 +163,6 @@ describe("DefaultValidationAdapter", () => {
       const payload: LoginData = {
         email: "test@test.com",
         password: "pass",
-        twoFactorAuthentication: false
       };
   
       try {
@@ -190,7 +184,6 @@ describe("DefaultValidationAdapter", () => {
       const payload: LoginData = {
         email: "invalid",
         password: "pass",
-        twoFactorAuthentication: false
       };
   
       try {
@@ -213,7 +206,6 @@ describe("DefaultValidationAdapter", () => {
       const payload: LoginData = {
         email: "test@test.com",
         password: "password",
-        twoFactorAuthentication: false
       };
   
       validationAdapter.login(payload);

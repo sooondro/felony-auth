@@ -79,16 +79,14 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
       const payload2: RegistrationData = {
         username: 'FooBaz',
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       await postgresAdapter.register(payload1)
@@ -116,16 +114,14 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
       const payload2: RegistrationData = {
         username: 'FooBar',
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@baz.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       const user = await postgresAdapter.register(payload1)
@@ -145,8 +141,7 @@ describe('PostgresAdapter', () => {
         firstName: '',
         lastName: '',
         email: '',
-        password: '',
-        twoFactorAuthentication: false
+        password: ''
       }
 
       try {
@@ -163,8 +158,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       try {
@@ -180,8 +174,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       const user = await postgresAdapter.register(payload)
@@ -193,24 +186,6 @@ describe('PostgresAdapter', () => {
       expect(user.lastName).toEqual('Bar')
       expect(user.email).toEqual('foo@bar.com')
     })
-
-    // it("should throw an error when only a valid email is provided", async () => {
-    //   const payload: RegistrationData = {
-    //     username: "",
-    //     firstName: "",
-    //     lastName: "",
-    //     email: "foobar@baz.com",
-    //     password: "",
-    //     twoFactorAuthentication: false
-    //   };
-
-    //   try {
-    //     await postgresAdapter.register(payload);
-    //     fail();
-    //   } catch (error) {        
-    //     expect(postgresAdapter.register).toHaveBeenCalledTimes(1);
-    //   }
-    // });
   })
 
   describe('login', () => {
@@ -229,8 +204,7 @@ describe('PostgresAdapter', () => {
     it('should throw ValidationErrors when invalid payload is provided', async () => {
       const payload: LoginData = {
         email: '',
-        password: '',
-        twoFactorAuthentication: false
+        password: ''
       }
 
       try {
@@ -244,8 +218,7 @@ describe('PostgresAdapter', () => {
     it('should throw when nonexistent email is provided', async () => {
       const loginData: LoginData = {
         email: 'foo@baz.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       try {
@@ -269,14 +242,12 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       const loginData: LoginData = {
         email: 'foo@bar.com',
-        password: 'invalid',
-        twoFactorAuthentication: false
+        password: 'invalid'
       }
 
       jest.spyOn(postgresAdapter, 'register')
@@ -301,27 +272,25 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       const loginData: LoginData = {
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       jest.spyOn(postgresAdapter, 'register')
 
       await postgresAdapter.register(registrationData)
-      const authenticableUser = await postgresAdapter.login(loginData)
+      const { user, twoFactorUser } = await postgresAdapter.login(loginData)
 
       expect(postgresAdapter.register).toHaveBeenCalledTimes(1)
       expect(postgresAdapter.login).toHaveBeenCalledTimes(1)
-      expect(authenticableUser.email).toEqual('foo@bar.com')
-      expect(authenticableUser.firstName).toEqual('Foo')
-      expect(authenticableUser.lastName).toEqual('Bar')
-      expect(authenticableUser.username).toEqual('FooBar')
+      expect(user.email).toEqual('foo@bar.com')
+      expect(user.firstName).toEqual('Foo')
+      expect(user.lastName).toEqual('Bar')
+      expect(user.username).toEqual('FooBar')
     })
   })
 
@@ -363,8 +332,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       await postgresAdapter.register(registrationData)
@@ -418,8 +386,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       const registeredUser = await postgresAdapter.register(registrationData)
@@ -472,8 +439,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       await postgresAdapter.register(registrationData)
@@ -517,8 +483,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       await postgresAdapter.register(registrationData)
@@ -539,8 +504,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       await postgresAdapter.register(registrationData)
@@ -598,8 +562,7 @@ describe('PostgresAdapter', () => {
         firstName: 'Foo',
         lastName: 'Bar',
         email: 'foo@bar.com',
-        password: 'foobar',
-        twoFactorAuthentication: false
+        password: 'foobar'
       }
 
       const user = await postgresAdapter.register(payload)
@@ -627,7 +590,6 @@ describe('PostgresAdapter', () => {
         lastName: 'Bar',
         email: 'foo@bar.com',
         password: 'foobar',
-        twoFactorAuthentication: false
       }
 
       const user = await postgresAdapter.register(payload)
@@ -654,7 +616,6 @@ describe('PostgresAdapter', () => {
         lastName: 'Bar',
         email: 'foo@bar.com',
         password: 'foobar',
-        twoFactorAuthentication: false
       }
 
       const user = await postgresAdapter.register(payload)
@@ -734,7 +695,6 @@ describe('PostgresAdapter', () => {
         lastName: 'Bar',
         email: 'foo@bar.com',
         password: 'foobar',
-        twoFactorAuthentication: false
       }
 
       const user = await postgresAdapter.register(payload)
@@ -754,6 +714,75 @@ describe('PostgresAdapter', () => {
       expect(twoFactorUser.provider).toEqual(twoFactorPayload.provider)
       expect(twoFactorUser.secret).toEqual(twoFactorPayload.secret)
     })
+  })
+
+  describe("getUsersTwoFactorProvidersByEmail", () => {
+    beforeEach(async () => {
+      postgresAdapter = new PostgresAdapter()
+      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
+      await postgresAdapter.models.User.destroy({ where: {} })
+      jest.spyOn(postgresAdapter, 'getUsersTwoFactorProvidersByEmail')
+    })
+
+    afterEach(() => {
+      jest.resetAllMocks()
+    })
+
+    it("should throw ValidationErrors when a nonexistent email is provided", async () => {
+      try {
+        await postgresAdapter.getUsersTwoFactorProvidersByEmail("foo@bar.com")
+      } catch (error) {
+        expect(error).toBeInstanceOf(ValidationErrors)
+        expect(postgresAdapter.getUsersTwoFactorProvidersByEmail).toHaveBeenCalledTimes(1)
+      }
+    })
+
+    it("should return an empty array if no 2fa provider is enabled for the provided email", async () => {
+      const payload: RegistrationData = {
+        username: 'FooBar',
+        firstName: 'Foo',
+        lastName: 'Bar',
+        email: 'foo@bar.com',
+        password: 'foobar',
+      }
+
+      await postgresAdapter.register(payload)
+
+      const providers = await postgresAdapter.getUsersTwoFactorProvidersByEmail("foo@bar.com")
+
+      expect(postgresAdapter.getUsersTwoFactorProvidersByEmail).toHaveBeenCalledTimes(1);
+
+      expect(providers.length).toEqual(0);
+    });
+
+    it("should return an array of providers names that are enabled for the provided email", async () => {
+      const payload: RegistrationData = {
+        username: 'FooBar',
+        firstName: 'Foo',
+        lastName: 'Bar',
+        email: 'foo@bar.com',
+        password: 'foobar',
+        twoFactorAuthenticationProvider: "TOTP"
+      }
+
+      const user = await postgresAdapter.register(payload)
+
+      const providers = await postgresAdapter.getUsersTwoFactorProvidersByEmail("foo@bar.com")
+
+      const twoFactorPayload: TwoFactorRegistrationData = {
+        userId: user.id,
+        secret: 'foobarbaz',
+        provider: 'TOTP'
+      }
+
+      const twoFactorUser = await postgresAdapter.registerTwoFactorUser(twoFactorPayload)
+
+      expect(postgresAdapter.getUsersTwoFactorProvidersByEmail).toHaveBeenCalledTimes(1);
+
+      expect(providers.length).toEqual(1);
+
+    });
   })
 })
 
@@ -795,7 +824,7 @@ describe('PostgresAdapter', () => {
 //     //   lastName: "Bar",
 //     //   email: "foo@bar.com",
 //     //   password: "foobar",
-//     //   twoFactorAuthentication: false
+//     //   
 //     // };
 //     // user = await postgresAdapter.register(registrationData);
 //     await TwoFactorUser.destroy({ where: {} });

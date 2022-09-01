@@ -133,7 +133,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableUser>}
    * @throws
    */
-  async login (payload: LoginData): Promise<AuthenticableUser> {
+  async login (payload: LoginData): Promise<{ user: AuthenticableUser, twoFactorUser: AuthenticableTwoFactorUser }> {
     const user = await this.models.User.findOne({
       where: { email: payload.email },
       include: {
@@ -155,7 +155,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
     const authUser: AuthenticableUser = user
 
-    return authUser
+    return { user: authUser, twoFactorUser: user.TwoFactorUsers[0] as AuthenticableTwoFactorUser ?? null }
   }
 
   /**
@@ -242,6 +242,35 @@ export default class PostgresAdapter implements StorageAdapterInterface {
     }
 
     return twoFactorUser
+  }
+
+  async getUsersTwoFactorProvidersByEmail (email: string): Promise<string[]> {
+    const user = await this.models.User.findOne({
+      where: { email },
+      include: {
+        model: this.models.TwoFactorUser
+      }
+    })
+
+    if (user === null) {
+      const validationErrors = new ValidationErrors()
+      validationErrors.addError('email', 'invalid credentials')
+      throw validationErrors
+    }
+
+    const result: string[] = []
+
+    console.log(user.TwoFactorUsers)
+
+    user.TwoFactorUsers.forEach((element: { provider: string }) => {
+      console.log('PROVIDER', element)
+
+      result.push(element.provider)
+    })
+
+    console.log('REZULTAT', result)
+
+    return result
   }
 
   // /**

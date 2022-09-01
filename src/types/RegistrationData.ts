@@ -28,9 +28,9 @@ interface RegistrationData {
   password: string
 
   /**
-   * Two-factor authentication flag.
+   * Two-factor authentication provider name.
    */
-  twoFactorAuthentication: boolean
+  twoFactorAuthenticationProvider?: string
 }
 
 export default RegistrationData

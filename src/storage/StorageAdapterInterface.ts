@@ -29,7 +29,7 @@ export default interface StorageAdapterInterface {
    *
    * @param {LoginData} payload
    */
-  login: (payload: LoginData) => Promise<AuthenticableUser>
+  login: (payload: LoginData) => Promise<{ user: AuthenticableUser, twoFactorUser: AuthenticableTwoFactorUser }>
 
   /**
    * Fetch user from the database by email.
@@ -80,4 +80,11 @@ export default interface StorageAdapterInterface {
    * @param {string} newPassword
    */
   changePassword: (email: string, oldPassword: string, newPassword: string) => Promise<void>
+
+  /**
+   * Fetch all the two-factor providers that are enabled for the given email
+   *
+   * @param {string} email
+   */
+  getUsersTwoFactorProvidersByEmail: (email: string) => Promise<string[]>
 }
