@@ -1,7 +1,7 @@
-type ErrorData = {
-  name: string,
-  message: string,
-  statusCode: number,
+interface ErrorData { // PITANJE je li potrebno
+  name: string
+  message: string
+  statusCode: number
 }
 
-export default ErrorData;
+export default ErrorData

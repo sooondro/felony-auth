@@ -1,9 +1,9 @@
-type RedisConnectionData = {
+interface RedisConnectionData {
   socket: {
-    host: string,
-    port: number,
-  },
-  password?: string,
-};
+    host: string
+    port: number
+  }
+  password?: string
+}
 
-export default RedisConnectionData;
+export default RedisConnectionData

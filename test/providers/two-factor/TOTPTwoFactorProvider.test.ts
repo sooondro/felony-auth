@@ -1,4 +1,5 @@
 import { authenticator } from "otplib";
+import AuthenticationError from "../../../src/error/AuthenticationError";
 
 import TOTPTwoFactorProvider from "../../../src/providers/two-factor/TOTPTwoFactorProvider";
 import AuthenticableTwoFactorUser from "../../../src/types/AuthenticableTwoFactorUser";
@@ -62,7 +63,10 @@ describe("TOTPTwoFactorProvider", () => {
         twoFactorProvider.verify(user, "foo");
       } catch (error) {
         expect(twoFactorProvider.verify).toHaveBeenCalledTimes(1);
-        expect(error).toEqual("Verification failed! Invalid 2FA code!");
+        expect(error).toBeInstanceOf(AuthenticationError);
+        if (error instanceof AuthenticationError) {
+          expect(error.message).toEqual('invalid credentials')
+        }
       }
     });
 

@@ -1,14 +1,18 @@
-import User from "./user";
-import TwoFactorUser from "./two_factor_user";
+
+import User from './user'
+import TwoFactorUser from './two_factor_user'
 
 class Models {
-  public User: any;
-  public TwoFactorUser: any;
+  public User: any
+  public TwoFactorUser: any
 
-  constructor(sequelize: any, DataTypes: any) {
-    this.User = User(sequelize, DataTypes);
-    this.TwoFactorUser = TwoFactorUser(sequelize, DataTypes);
+  constructor (sequelize: any, DataTypes: any) {
+    this.User = User(sequelize, DataTypes)
+    this.TwoFactorUser = TwoFactorUser(sequelize, DataTypes)
+
+    this.User.hasMany(this.TwoFactorUser, { foreignKey: 'user_id' })
+    this.TwoFactorUser.belongsTo(this.User, { foreignKey: 'user_id' })
   }
 }
 
-export default Models;
+export default Models

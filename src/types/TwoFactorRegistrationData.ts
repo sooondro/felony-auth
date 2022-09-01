@@ -1,21 +1,21 @@
 /**
  * Data required for the two-factor registration process.
  */
-type TwoFactorRegistrationData = {
+interface TwoFactorRegistrationData {
   /**
    * User's id.
    */
-  userId: string,
+  userId: string
 
   /**
    * User's session CSRF secret.
    */
-  secret: string,
+  secret: string
 
   /**
    * Name of the provider.
    */
-  provider: string,
-};
+  provider: string
+}
 
-export default TwoFactorRegistrationData;
+export default TwoFactorRegistrationData

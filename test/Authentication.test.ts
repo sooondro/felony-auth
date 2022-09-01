@@ -915,7 +915,10 @@ describe("Authentication", () => {
       } catch (error) {
         expect(authentication.logout).toHaveBeenCalledTimes(1);
         expect(authentication.CacheAdapter.logout).toHaveBeenCalledTimes(1);
-        expect(error).toEqual("Session not found");
+        expect(error).toBeInstanceOf(AuthenticationError);
+        if (error instanceof AuthenticationError) {
+          expect(error.message).toEqual('invalid credentials')
+        }
       }
     });
   });

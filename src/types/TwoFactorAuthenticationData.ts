@@ -1,11 +1,11 @@
 /**
  * Data required for the two-factor authentication process.
  */
-type TwoFactorAuthenticationData = {
+interface TwoFactorAuthenticationData {
   /**
    * CSRF token sent by the user.
    */
-  code: string,
-};
+  code: string
+}
 
-export default TwoFactorAuthenticationData;
+export default TwoFactorAuthenticationData

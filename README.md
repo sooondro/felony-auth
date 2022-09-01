@@ -2,7 +2,7 @@
 
 A criminally easy to use out-of-the-box authentication module designed to bootstrap your project's authentication in no time.
 
-Authentication is something that most of modern applications require. We at Barrage found ourselves writing the same logic project after project, and thought that there must be an easier way of doing things. The idea of creating an authentication module to be used in future projects was born. We tailored the module to fit our needs at Barrage, creating default implementations that we use, but made sure that other users can customize it for their own needs too. Felony-auth is technology agnostic and relies on abstraction which is achieved through interfaces.
+Authentication is something that most of modern applications require. We at Barrage found ourselves writing the same logic project after project, and thought that there must be an easier way of doing things. The idea of creating an authentication module to be used in future projects was born. We tailored the module to fit our needs at Barrage, creating default implementations used by our developers, but made sure that other users can customize it for their own needs too. Felony-auth is technology agnostic and relies on abstraction which is achieved with the help of interfaces.
 
 Felony-auth comes with default implementations and is visioned as an install and use solution for authentication. The default configuration comes with validation and error adapters, as well as a Postgres adapter for storing data to the database, Redis adapter for handling cache memory and a 2FA provider for handling two-factor authentication designed to use a time-based one-time password (TOTP). 
 
@@ -55,7 +55,7 @@ Authentication.TwoFactorProvider = twoFactorProvider;
 ```
 
 ### PostgresAdapter
-Another step is required before injecting the postgres adapter to be used as your storage adapter. To be precise, after creating an instance, a connection has to be established. To establish a connection to the database, you can use the following two methods. Since establishing a connection is an async task, the method has to be awaited or the promise has to be handled using .then().
+Another step is required before injecting the postgres adapter to be used as your storage adapter. To be precise, after creating an instance, a connection has to be established. To establish a connection to the database, you can use one of the following two methods. Since establishing a connection is an async task, the method has to be awaited or the promise has to be handled using .then().
 
 Using the connection string:
 ```js

@@ -1,4 +1,5 @@
 import RedisAdapter from "../../../src/cache/redis/RedisAdapter";
+import AuthenticationError from "../../../src/error/AuthenticationError";
 import AuthenticableUser from "../../../src/types/AuthenticableUser";
 import RedisConnectionData from "../../../src/types/RedisConnectionData";
 
@@ -59,7 +60,7 @@ describe("RedisAdapter", () => {
         await redisAdapter.setupConnectionWithConnectionData(config);
       } catch (error) {
         expect(redisAdapter.setupConnectionWithConnectionData).toHaveBeenCalledTimes(1);
-        if(error instanceof Error) {
+        if (error instanceof Error) {
           expect(error.message).toEqual("getaddrinfo");
         }
       }
@@ -146,7 +147,10 @@ describe("RedisAdapter", () => {
         await redisAdapter.getSession("foo");
       } catch (error) {
         expect(redisAdapter.getSession).toHaveBeenCalledTimes(1);
-        expect(error).toEqual("Session not found");
+        expect(error).toBeInstanceOf(AuthenticationError);
+        if (error instanceof AuthenticationError) {
+          expect(error.message).toEqual('invalid credentials')
+        }
       }
     });
 
@@ -197,7 +201,10 @@ describe("RedisAdapter", () => {
       } catch (error) {
         expect(redisAdapter.getSession).toHaveBeenCalledTimes(1);
         expect(redisAdapter.logout).toHaveBeenCalledTimes(1);
-        expect(error).toEqual("Session not found");
+        expect(error).toBeInstanceOf(AuthenticationError);
+        if (error instanceof AuthenticationError) {
+          expect(error.message).toEqual('invalid credentials')
+        }
       }
     });
   });
@@ -231,7 +238,10 @@ describe("RedisAdapter", () => {
         await redisAdapter.validateCSRF(sessionId, "foo");
       } catch (error) {
         expect(redisAdapter.validateCSRF).toHaveBeenCalledTimes(1);
-        expect(error).toEqual("Invalid CSRF token");
+        expect(error).toBeInstanceOf(AuthenticationError);
+        if (error instanceof AuthenticationError) {
+          expect(error.message).toEqual('invalid credentials')
+        }
       }
     });
 

@@ -1,41 +1,42 @@
-import Authentication from "../Authentication";
-import ErrorAdapterInterface from "./ErrorAdapterInterface";
-import ErrorData from "../types/ErrorData";
-import AuthenticationError from "./AuthenticationError";
-import { ValidationErrors } from "./ValidationError";
+import Authentication from '../Authentication'
+import ErrorAdapterInterface from './ErrorAdapterInterface'
+import ErrorData from '../types/ErrorData'
+import AuthenticationError from './AuthenticationError'
+import { ValidationErrors } from './ValidationError'
 
 /**
  * Default error adapter.
- * 
+ *
  * @type {Class}
  */
 export default class DefaultErrorAdapter implements ErrorAdapterInterface {
-  private authentication!: Authentication;
+  private authentication!: Authentication
 
   /**
    * Used for injecting Authentication class into the adapter.
-   * 
-   * @param {Authentication} authentication 
+   *
+   * @param {Authentication} authentication
    */
-  initialize(authentication: Authentication): void {
-    this.authentication = authentication;
+  initialize (authentication: Authentication): void {
+    this.authentication = authentication
   }
 
-  handleError(error: string | ErrorData | Error | AuthenticationError | ValidationErrors): AuthenticationError | ValidationErrors {
-    if (typeof error === "string") {
-      return new AuthenticationError(error, { name: "AuthenticationError", statusCode: 401 });
+  handleError (error: string | ErrorData | Error | AuthenticationError | ValidationErrors): AuthenticationError | ValidationErrors {
+    if (typeof error === 'string') {
+      return new AuthenticationError(error, { name: 'AuthenticationError', statusCode: 401 })
     } else if (error instanceof AuthenticationError || error instanceof ValidationErrors) {
-      return error;
+      return error
     } else if (error instanceof Error) {
-      return new AuthenticationError(error.message, { name: error.name, statusCode: 500 });
+      return new AuthenticationError(error.message, { name: error.name, statusCode: 500 })
     }
-    return new AuthenticationError(error.message, { name: error.name, statusCode: error.statusCode });
+
+    return new AuthenticationError(error.message, { name: error.name, statusCode: error.statusCode })
   }
 
   // /**
   //  * Handler for registration errors.
-  //  * 
-  //  * @param {string | ErrorData | Error | AuthenticationError | ValidationError | ValidationErrors} error 
+  //  *
+  //  * @param {string | ErrorData | Error | AuthenticationError | ValidationError | ValidationErrors} error
   //  */
   // handleRegistrationError(error: string | ErrorData | Error | AuthenticationError | ValidationErrors) {
   //   if (typeof error === "string") {
@@ -61,8 +62,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Handler for login errors.
-  //  * 
-  //  * @param error 
+  //  *
+  //  * @param error
   //  */
   // login(error: string | object | Error): never {
   //   throw new Error("Method not implemented.");
@@ -70,9 +71,9 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw session adapter error.
-  //  * 
+  //  *
   //  * @param {Error} error
-  //  * @throws {Error} 
+  //  * @throws {Error}
   //  */
   // throwSessionAdapterError(error: Error): never {
   //   throw error;
@@ -80,8 +81,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw CSRF error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwCSRFError(error: Error): never {
@@ -90,8 +91,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw data not found error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwDataNotFoundError(error: Error): never {
@@ -100,8 +101,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw two-factor verification error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwTwoFactorVerificationError(error: Error): never {
@@ -110,8 +111,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw two-factor registration error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwTwoFactorRegistrationError(error: Error): never {
@@ -120,8 +121,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw login validation error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwLoginValidationError(error: Error): never {
@@ -130,8 +131,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw login error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwLoginError(error: Error): never {
@@ -140,8 +141,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw two-factor provider error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwTwoFactorProviderError(error: Error): never {
@@ -150,8 +151,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw registration validation error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwRegistrationValidationError(error: Error): never {
@@ -160,8 +161,8 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw registration error.
-  //  * 
-  //  * @param {Error} error 
+  //  *
+  //  * @param {Error} error
   //  * @throws {Error}
   //  */
   // throwRegistrationError(error: Error): never {
@@ -170,7 +171,7 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw storage connection error.
-  //  * 
+  //  *
   //  * @param {Error} error
   //  * @throws {Error}
   //  */
@@ -180,9 +181,9 @@ export default class DefaultErrorAdapter implements ErrorAdapterInterface {
 
   // /**
   //  * Throw storage adapter error.
-  //  * 
+  //  *
   //  * @param {Error} error
-  //  * @throws {Error} 
+  //  * @throws {Error}
   //  */
   // throwStorageAdapterError(error: Error): never {
   //   throw error;

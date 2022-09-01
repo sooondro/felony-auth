@@ -1,36 +1,36 @@
 /**
  * Data required for conecting to the postgres database.
  */
-type PostgresConnectionData = {
+interface PostgresConnectionData {
   /**
    * Database name.
    */
-  database: string,
+  database: string
 
   /**
    * Database user's username.
    */
-  username: string,
+  username: string
 
   /**
    * Database user's password.
    */
-  password: string,
+  password: string
 
   /**
    * Database host. e.g. localhost.
    */
-  host: string,
+  host: string
 
   /**
    * Database port number.
    */
-  port: number,
+  port: number
 
   /**
    * SQL dialect.
    */
-  dialect: string,
-};
+  dialect: string
+}
 
-export default PostgresConnectionData;
+export default PostgresConnectionData

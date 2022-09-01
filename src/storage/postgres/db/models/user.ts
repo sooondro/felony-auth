@@ -1,15 +1,15 @@
-'use strict';
-import { Model, UUIDV4 } from 'sequelize';
+'use strict'
+import { Model, UUIDV4 } from 'sequelize'
 
 interface UserAttributes {
-  id: string;
-  username: string;
-  firstName?: string;
-  lastName?: string;
-  email: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
+  id: string
+  username: string
+  firstName?: string
+  lastName?: string
+  email: string
+  password: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 export default (sequelize: any, DataTypes: any): any => {
@@ -19,19 +19,16 @@ export default (sequelize: any, DataTypes: any): any => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    declare id: string;
-    declare username: string;
-    declare firstName: string;
-    declare lastName: string;
-    declare email: string;
-    declare password: string;
-    declare createdAt: Date;
-    declare updatedAt: Date;
-
-    static associate(models: any) {
-      // define association here
-    }
+    declare id: string
+    declare username: string
+    declare firstName: string
+    declare lastName: string
+    declare email: string
+    declare password: string
+    declare createdAt: Date
+    declare updatedAt: Date
   }
+
   User.init(
     {
       id: {
@@ -40,7 +37,7 @@ export default (sequelize: any, DataTypes: any): any => {
         allowNull: false,
         primaryKey: true,
         validate: {
-          isUUID: 4,
+          isUUID: 4
         }
       },
       username: {
@@ -70,34 +67,34 @@ export default (sequelize: any, DataTypes: any): any => {
         unique: true,
         validate: {
           isEmail: true,
-          notEmpty: true,
-        },
+          notEmpty: true
+        }
       },
       password: {
         type: DataTypes.STRING,
         allowNull: false,
         validate: {
           notEmpty: true,
-          len: [6, 256],
+          len: [6, 256]
         }
       },
       createdAt: {
         type: DataTypes.DATE,
         field: 'created_at',
-        allowNull: false,
+        allowNull: false
       },
       updatedAt: {
         type: DataTypes.DATE,
         allowNull: false,
-        field: 'updated_at',
-      },
+        field: 'updated_at'
+      }
     },
     {
       sequelize,
       modelName: 'User',
       tableName: 'user',
-      freezeTableName: true,
+      freezeTableName: true
     }
-  );
-  return User;
-};
+  )
+  return User
+}
