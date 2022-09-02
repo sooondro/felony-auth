@@ -29,7 +29,7 @@ export default interface StorageAdapterInterface {
    *
    * @param {LoginData} payload
    */
-  login: (payload: LoginData) => Promise<{ user: AuthenticableUser, twoFactorUser: AuthenticableTwoFactorUser }>
+  login: (payload: LoginData) => Promise<{ user: AuthenticableUser, twoFactorUsers: AuthenticableTwoFactorUser[] }>
 
   /**
    * Fetch user from the database by email.

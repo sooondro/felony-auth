@@ -38,16 +38,16 @@ describe('PostgresAdapter', () => {
     })
   })
 
-  describe('setupConnectionWithConnectionUrl', () => {
+  describe('setupConnectionWithConnectionString', () => {
     it('should instantiate the client when valid connection uri is passed', async () => {
       const postgresAdapter = new PostgresAdapter()
       const connectioUri = 'postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test'
 
-      jest.spyOn(postgresAdapter, 'setupConnectionWithConnectionUrl')
+      jest.spyOn(postgresAdapter, 'setupConnectionWithConnectionString')
 
-      await postgresAdapter.setupConnectionWithConnectionUrl(connectioUri)
+      await postgresAdapter.setupConnectionWithConnectionString(connectioUri)
 
-      expect(postgresAdapter.setupConnectionWithConnectionUrl).toHaveBeenCalledTimes(1)
+      expect(postgresAdapter.setupConnectionWithConnectionString).toHaveBeenCalledTimes(1)
       expect(postgresAdapter['client']).toBeDefined()
       expect(postgresAdapter['client']['config'].database).toEqual('felony_auth_test')
       expect(postgresAdapter['client']['config'].username).toEqual('postgres')
@@ -61,7 +61,7 @@ describe('PostgresAdapter', () => {
   describe('register', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'register')
@@ -191,7 +191,7 @@ describe('PostgresAdapter', () => {
   describe('login', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'login')
@@ -266,7 +266,7 @@ describe('PostgresAdapter', () => {
       }
     })
 
-    it('should return AuthenticableUser object when valid data is provided', async () => {
+    it('should return an AuthenticableUser object when valid data is provided', async () => {
       const registrationData: RegistrationData = {
         username: 'FooBar',
         firstName: 'Foo',
@@ -292,12 +292,43 @@ describe('PostgresAdapter', () => {
       expect(user.lastName).toEqual('Bar')
       expect(user.username).toEqual('FooBar')
     })
+
+
+    it(`should return an AuthenticableUser and an AuthenticableTwoFactorUser object 
+    when two-factor registration and valid data is provided`, async () => {
+      const registrationData: RegistrationData = {
+        username: 'FooBar',
+        firstName: 'Foo',
+        lastName: 'Bar',
+        email: 'foo@bar.com',
+        password: 'foobar',
+        twoFactorAuthenticationProvider: "TOTP"
+      }
+
+      const loginData: LoginData = {
+        email: 'foo@bar.com',
+        password: 'foobar'
+      }
+
+      jest.spyOn(postgresAdapter, 'register')
+
+      await postgresAdapter.register(registrationData)
+
+      const { user, twoFactorUser } = await postgresAdapter.login(loginData)
+
+      expect(postgresAdapter.register).toHaveBeenCalledTimes(1)
+      expect(postgresAdapter.login).toHaveBeenCalledTimes(1)
+      expect(user.email).toEqual('foo@bar.com')
+      expect(user.firstName).toEqual('Foo')
+      expect(user.lastName).toEqual('Bar')
+      expect(user.username).toEqual('FooBar')
+    })
   })
 
   describe('getUserByEmail', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'getUserByEmail')
@@ -350,7 +381,7 @@ describe('PostgresAdapter', () => {
   describe('getUserById', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'getUserById')
@@ -403,7 +434,7 @@ describe('PostgresAdapter', () => {
   describe('getUserByUsername', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'getUserByUsername')
@@ -457,7 +488,7 @@ describe('PostgresAdapter', () => {
   describe('changePassword', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'changePassword')
@@ -518,7 +549,7 @@ describe('PostgresAdapter', () => {
   describe('registerTwoFactorUser', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'registerTwoFactorUser')
@@ -645,7 +676,7 @@ describe('PostgresAdapter', () => {
   describe('getTwoFactorUser', () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'getTwoFactorUser')
@@ -719,7 +750,7 @@ describe('PostgresAdapter', () => {
   describe("getUsersTwoFactorProvidersByEmail", () => {
     beforeEach(async () => {
       postgresAdapter = new PostgresAdapter()
-      await postgresAdapter.setupConnectionWithConnectionUrl('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
       await postgresAdapter.models.User.destroy({ where: {} })
       jest.spyOn(postgresAdapter, 'getUsersTwoFactorProvidersByEmail')
@@ -768,20 +799,19 @@ describe('PostgresAdapter', () => {
 
       const user = await postgresAdapter.register(payload)
 
-      const providers = await postgresAdapter.getUsersTwoFactorProvidersByEmail("foo@bar.com")
-
+      
       const twoFactorPayload: TwoFactorRegistrationData = {
         userId: user.id,
         secret: 'foobarbaz',
         provider: 'TOTP'
       }
-
+      
       const twoFactorUser = await postgresAdapter.registerTwoFactorUser(twoFactorPayload)
+      const providers = await postgresAdapter.getUsersTwoFactorProvidersByEmail("foo@bar.com")
 
       expect(postgresAdapter.getUsersTwoFactorProvidersByEmail).toHaveBeenCalledTimes(1);
-
       expect(providers.length).toEqual(1);
-
+      expect(providers.pop()).toEqual('TOTP')
     });
   })
 })
@@ -789,7 +819,7 @@ describe('PostgresAdapter', () => {
 // describe("getTwoFactorUserByEmail", () => {
 //   beforeEach(async () => {
 //     postgresAdapter = new PostgresAdapter();
-//     await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+//     await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
 //     await postgresAdapter.models.TwoFactorUser.destroy({ where: {} });
 //     await postgresAdapter.models.User.destroy({ where: {} });
 //     jest.spyOn(postgresAdapter, "getTwoFactorUserByEmail");

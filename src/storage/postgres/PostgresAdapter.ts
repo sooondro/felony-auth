@@ -61,7 +61,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @param {string} connectionUrl
    * @throws
    */
-  async setupConnectionWithConnectionUrl (connectionUrl: string): Promise<void> {
+  async setupConnectionWithConnectionString (connectionUrl: string): Promise<void> {
     this.client = new Sequelize(connectionUrl, {
       dialect: 'postgres',
       logging: false
@@ -133,7 +133,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
    * @return {Promise<AuthenticableUser>}
    * @throws
    */
-  async login (payload: LoginData): Promise<{ user: AuthenticableUser, twoFactorUser: AuthenticableTwoFactorUser }> {
+  async login (payload: LoginData): Promise<{ user: AuthenticableUser, twoFactorUsers: AuthenticableTwoFactorUser[] }> {
     const user = await this.models.User.findOne({
       where: { email: payload.email },
       include: {
@@ -147,6 +147,8 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       throw validationErrors
     }
 
+    console.log('TWOFACTORPROVIDERS', user.TwoFactorUsers)
+
     const result = await Bcrypt.compare(payload.password, user.password)
 
     if (!result) {
@@ -155,7 +157,7 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
     const authUser: AuthenticableUser = user
 
-    return { user: authUser, twoFactorUser: user.TwoFactorUsers[0] as AuthenticableTwoFactorUser ?? null }
+    return { user: authUser, twoFactorUsers: user.TwoFactorUsers }
   }
 
   /**
@@ -260,15 +262,9 @@ export default class PostgresAdapter implements StorageAdapterInterface {
 
     const result: string[] = []
 
-    console.log(user.TwoFactorUsers)
-
     user.TwoFactorUsers.forEach((element: { provider: string }) => {
-      console.log('PROVIDER', element)
-
       result.push(element.provider)
     })
-
-    console.log('REZULTAT', result)
 
     return result
   }

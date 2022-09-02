@@ -12,9 +12,9 @@ describe("TOTPTwoFactorProvider", () => {
     twoFactorProvider = new TOTPTwoFactorProvider();
   });
 
-  describe("register", () => {
+  describe("generateRegistrationData", () => {
     beforeEach(() => {
-      jest.spyOn(twoFactorProvider, "register");
+      jest.spyOn(twoFactorProvider, "generateRegistrationData");
     });
 
     afterEach(() => {
@@ -30,9 +30,9 @@ describe("TOTPTwoFactorProvider", () => {
         email: "foo@bar.com"
       };
 
-      const registrationData = twoFactorProvider.register(user);
+      const registrationData = twoFactorProvider.generateRegistrationData(user);
 
-      expect(twoFactorProvider.register).toHaveBeenCalledTimes(1);
+      expect(twoFactorProvider.generateRegistrationData).toHaveBeenCalledTimes(1);
       expect(registrationData).toBeDefined();
       expect(registrationData.userId).toBeDefined();
       expect(registrationData.userId).toEqual(user.id);

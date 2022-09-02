@@ -7,7 +7,7 @@ describe("two_factor_user", () => {
 
   beforeEach(async () => {
     await postgresAdapter
-      .setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      .setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
     await postgresAdapter.models.TwoFactorUser.destroy({ where: {} });
     await postgresAdapter.models.User.destroy({ where: {} });
   });

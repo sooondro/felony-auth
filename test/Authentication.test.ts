@@ -23,14 +23,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -179,14 +179,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -245,42 +245,6 @@ describe("Authentication", () => {
       }
     });
 
-    it("should handle the error correctly when StorageAdapter getTwoFactorUser method throws", async () => {
-      const registrationPayload: RegistrationData = {
-        username: "FooBar",
-        firstName: "Foo",
-        lastName: "Bar",
-        email: "foo@bar.com",
-        password: "foobar",
-        
-      };
-
-      await authentication.register(registrationPayload);
-
-      const loginPayload: LoginData = {
-        email: "foo@bar.com",
-        password: "foobar",
-        twoFactorAuthenticationData: {
-          provider: "TOTP",
-          code: "foobar"
-        }
-      };
-
-      jest.spyOn(authentication.StorageAdapter, "getTwoFactorUser").mockImplementationOnce(() => {
-        throw "foobar";
-      });
-
-      try {
-        await authentication.login(loginPayload);
-      } catch (error) {
-        expect(authentication.login).toHaveBeenCalledTimes(1);
-        expect(authentication.ValidationAdapter.login).toHaveBeenCalledTimes(1);
-        expect(authentication.StorageAdapter.login).toHaveBeenCalledTimes(1);
-        expect(authentication.StorageAdapter.getTwoFactorUser).toHaveBeenCalledTimes(1);
-        expect(error).toBeInstanceOf(AuthenticationError);
-      }
-    });
-
     it("should return a session ID when valid data is provided", async () => {
       const registrationPayload: RegistrationData = {
         username: "FooBar",
@@ -288,7 +252,6 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
       };
 
       await authentication.register(registrationPayload);
@@ -345,20 +308,20 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
 
       jest.spyOn(authentication, "registerTwoFactorUser");
-      jest.spyOn(authentication.getTwoFactorProvider("TOTP"), "register");
+      jest.spyOn(authentication.getTwoFactorProvider("TOTP"), "generateRegistrationData");
       jest.spyOn(authentication.getTwoFactorProvider("TOTP"), "generateQRCode");
       jest.spyOn(authentication.StorageAdapter, "registerTwoFactorUser");
 
@@ -372,7 +335,7 @@ describe("Authentication", () => {
       jest.resetAllMocks();
     });
 
-    it("should handle the error correctly when twoFactorProvider register method throws", async () => {
+    it("should handle the error correctly when twoFactorProvider generateRegistrationData method throws", async () => {
       const payload: AuthenticableUser = {
         id: "",
         username: "",
@@ -381,7 +344,7 @@ describe("Authentication", () => {
         email: ""
       };
 
-      jest.spyOn(authentication.getTwoFactorProvider("TOTP"), "register").mockImplementationOnce(() => {
+      jest.spyOn(authentication.getTwoFactorProvider("TOTP"), "generateRegistrationData").mockImplementationOnce(() => {
         throw "foobar";
       });
 
@@ -389,7 +352,7 @@ describe("Authentication", () => {
         await authentication.registerTwoFactorUser(payload, "TOTP");
       } catch (error) {
         expect(authentication.registerTwoFactorUser).toHaveBeenCalledTimes(1);
-        expect(authentication.getTwoFactorProvider("TOTP").register).toHaveBeenCalledTimes(1);
+        expect(authentication.getTwoFactorProvider("TOTP").generateRegistrationData).toHaveBeenCalledTimes(1);
         expect(authentication.StorageAdapter.registerTwoFactorUser).toHaveBeenCalledTimes(0);
         expect(authentication.getTwoFactorProvider("TOTP").generateQRCode).toHaveBeenCalledTimes(0);
         expect(error).toBeInstanceOf(AuthenticationError);
@@ -416,7 +379,7 @@ describe("Authentication", () => {
         await authentication.registerTwoFactorUser(user.user, "TOTP");
       } catch (error) {
         expect(authentication.registerTwoFactorUser).toHaveBeenCalledTimes(1);
-        expect(authentication.getTwoFactorProvider("TOTP").register).toHaveBeenCalledTimes(1);
+        expect(authentication.getTwoFactorProvider("TOTP").generateRegistrationData).toHaveBeenCalledTimes(1);
         expect(authentication.StorageAdapter.registerTwoFactorUser).toHaveBeenCalledTimes(1);
         expect(authentication.getTwoFactorProvider("TOTP").generateQRCode).toHaveBeenCalledTimes(0);
         expect(error).toBeInstanceOf(AuthenticationError);
@@ -443,7 +406,7 @@ describe("Authentication", () => {
         await authentication.registerTwoFactorUser(user.user, "TOTP");
       } catch (error) {
         expect(authentication.registerTwoFactorUser).toHaveBeenCalledTimes(1);
-        expect(authentication.getTwoFactorProvider("TOTP").register).toHaveBeenCalledTimes(1);
+        expect(authentication.getTwoFactorProvider("TOTP").generateRegistrationData).toHaveBeenCalledTimes(1);
         expect(authentication.StorageAdapter.registerTwoFactorUser).toHaveBeenCalledTimes(1);
         expect(authentication.getTwoFactorProvider("TOTP").generateQRCode).toHaveBeenCalledTimes(1);
         expect(error).toBeInstanceOf(AuthenticationError);
@@ -465,7 +428,7 @@ describe("Authentication", () => {
       const result = await authentication.registerTwoFactorUser(user.user, "TOTP");
 
       expect(authentication.registerTwoFactorUser).toHaveBeenCalledTimes(1);
-      expect(authentication.getTwoFactorProvider("TOTP").register).toHaveBeenCalledTimes(1);
+      expect(authentication.getTwoFactorProvider("TOTP").generateRegistrationData).toHaveBeenCalledTimes(1);
       expect(authentication.StorageAdapter.registerTwoFactorUser).toHaveBeenCalledTimes(1);
       expect(authentication.getTwoFactorProvider("TOTP").generateQRCode).toHaveBeenCalledTimes(1);
       expect(result).toBeDefined();
@@ -478,14 +441,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -586,14 +549,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -664,14 +627,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -781,14 +744,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -852,14 +815,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -915,14 +878,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -988,14 +951,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -1060,14 +1023,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -1121,14 +1084,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;
@@ -1192,14 +1155,14 @@ describe("Authentication", () => {
     beforeEach(async () => {
       authentication = new Authentication();
       postgresAdapter = new PostgresAdapter();
-      await postgresAdapter.setupConnectionWithConnectionUrl("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
       const errorAdapter = new DefaultErrorAdapter();
       const validationAdapter = new DefaultValidationAdapter();
       const twoFactorProvider = new TOTPTwoFactorProvider();
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl("redis://localhost:6379");
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
       authentication.CacheAdapter = redisAdapter;
-      authentication.setTwoFactorProvider(twoFactorProvider);
+      authentication.addTwoFactorProvider(twoFactorProvider);
       authentication.StorageAdapter = postgresAdapter;
       authentication.ErrorAdapter = errorAdapter;
       authentication.ValidationAdapter = validationAdapter;

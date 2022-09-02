@@ -30,7 +30,7 @@ export default class RedisAdapter implements CacheAdapterInterface {
    *
    * @param {string} url
    */
-  async setupConnectionWithConnectionUrl (url: string): Promise<void> {
+  async setupConnectionWithConnectionString (url: string): Promise<void> {
     this.client = createClient({
       url
     })

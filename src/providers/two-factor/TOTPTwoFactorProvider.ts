@@ -12,7 +12,7 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
   private authentication!: Authentication
 
   /**
-   * Type of 2FA
+   * Type of two-factor provider.
    */
   provider = 'TOTP'
 
@@ -26,12 +26,12 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
   }
 
   /**
-   * Registers a new user 2FA user. Generates a secret for the new user and saves it in the database.
+   * Generates data required for two-factor user registration.
    *
    * @param {AuthenticableUser} user
    * @returns
    */
-  register (user: AuthenticableUser): TwoFactorRegistrationData {
+  generateRegistrationData (user: AuthenticableUser): TwoFactorRegistrationData {
     const secret = authenticator.generateSecret()
 
     const userData: TwoFactorRegistrationData = {
@@ -44,7 +44,7 @@ export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface
   }
 
   /**
-   * Generates QR code base on AuthenticableTwoFactorUser object
+   * Generates QR code base on AuthenticableTwoFactorUser object.
    *
    * @param {AuthenticableTwoFactorUser} user
    * @returns

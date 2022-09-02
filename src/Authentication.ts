@@ -9,6 +9,7 @@ import LoginData from './types/LoginData'
 import Session from './types/Session'
 import AuthenticableUser from './types/AuthenticableUser'
 import AuthenticableTwoFactorUser from './types/AuthenticableTwoFactorUser'
+import AuthenticationError from './error/AuthenticationError'
 
 export default class Authentication {
   private errorAdapter!: ErrorAdapterInterface
@@ -104,7 +105,7 @@ export default class Authentication {
    *
    * @param {TwoFactorProviderInterface} payload
    */
-  setTwoFactorProvider (payload: TwoFactorProviderInterface): void { // PITANJE da ostavim da prepise vrijednost ako vec postoji ili da radim provjeru
+  addTwoFactorProvider (payload: TwoFactorProviderInterface): void { // PITANJE da ostavim da prepise vrijednost ako vec postoji ili da radim provjeru
     this.twoFactorProviders.set(payload.provider, payload)
   }
 
@@ -159,9 +160,19 @@ export default class Authentication {
     try {
       this.validationAdapter.login(payload)
 
-      const { user, twoFactorUser } = await this.storageAdapter.login(payload)
+      const { user, twoFactorUsers } = await this.storageAdapter.login(payload)
 
-      if (payload.twoFactorAuthenticationData !== undefined && twoFactorUser !== null) {
+      if (twoFactorUsers.length !== 0) {
+        if (payload.twoFactorAuthenticationData === undefined) {
+          throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
+        }
+
+        const twoFactorUser = twoFactorUsers.find(user => user.provider === payload.twoFactorAuthenticationData?.provider)
+
+        if (twoFactorUser === undefined) {
+          throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
+        }
+
         const twoFactorProvider = this.getTwoFactorProvider(payload.twoFactorAuthenticationData.provider)
         twoFactorProvider.verify(twoFactorUser, payload.twoFactorAuthenticationData.code)
       }
@@ -182,7 +193,7 @@ export default class Authentication {
     try {
       const twoFactorProvider = this.getTwoFactorProvider(provider)
 
-      const twoFactorUserRegistrationData = twoFactorProvider.register(user)
+      const twoFactorUserRegistrationData = twoFactorProvider.generateRegistrationData(user)
 
       const twoFactorUser = await this.storageAdapter.registerTwoFactorUser(twoFactorUserRegistrationData)
 

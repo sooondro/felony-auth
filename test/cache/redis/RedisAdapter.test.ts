@@ -7,10 +7,10 @@ describe("RedisAdapter", () => {
   let redisAdapter: RedisAdapter;
   const connectionString = "redis://localhost:6379";
 
-  describe("setupConnectionWithConnectionUrl", () => {
+  describe("setupConnectionWithConnectionString", () => {
     beforeEach(() => {
       redisAdapter = new RedisAdapter();
-      jest.spyOn(redisAdapter, "setupConnectionWithConnectionUrl");
+      jest.spyOn(redisAdapter, "setupConnectionWithConnectionString");
     });
 
     afterEach(() => {
@@ -19,9 +19,9 @@ describe("RedisAdapter", () => {
 
     it("should throw when invalid url is provided", async () => {
       try {
-        await redisAdapter.setupConnectionWithConnectionUrl("foobar");
+        await redisAdapter.setupConnectionWithConnectionString("foobar");
       } catch (error) {
-        expect(redisAdapter.setupConnectionWithConnectionUrl).toHaveBeenCalledTimes(1);
+        expect(redisAdapter.setupConnectionWithConnectionString).toHaveBeenCalledTimes(1);
         expect(redisAdapter["client"]).toBeUndefined();
         if (error instanceof Error) {
           expect(error.message).toEqual("Invalid URL");
@@ -30,9 +30,9 @@ describe("RedisAdapter", () => {
     });
 
     it("should connect when a valid connection url is provided", async () => {
-      await redisAdapter.setupConnectionWithConnectionUrl(connectionString);
+      await redisAdapter.setupConnectionWithConnectionString(connectionString);
 
-      expect(redisAdapter.setupConnectionWithConnectionUrl).toHaveBeenCalledTimes(1);
+      expect(redisAdapter.setupConnectionWithConnectionString).toHaveBeenCalledTimes(1);
       expect(redisAdapter["client"]).toBeDefined();
       redisAdapter["client"].quit();
     });
@@ -85,7 +85,7 @@ describe("RedisAdapter", () => {
   describe("createSession", () => {
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl(connectionString);
+      await redisAdapter.setupConnectionWithConnectionString(connectionString);
       jest.spyOn(redisAdapter, "createSession");
     });
 
@@ -132,7 +132,7 @@ describe("RedisAdapter", () => {
   describe("getSession", () => {
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl(connectionString);
+      await redisAdapter.setupConnectionWithConnectionString(connectionString);
       jest.spyOn(redisAdapter, "getSession");
     });
 
@@ -176,7 +176,7 @@ describe("RedisAdapter", () => {
   describe("logout", () => {
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl(connectionString);
+      await redisAdapter.setupConnectionWithConnectionString(connectionString);
       jest.spyOn(redisAdapter, "getSession");
       jest.spyOn(redisAdapter, "logout");
     });
@@ -212,7 +212,7 @@ describe("RedisAdapter", () => {
   describe("validateCSRF", () => {
     beforeEach(async () => {
       redisAdapter = new RedisAdapter();
-      await redisAdapter.setupConnectionWithConnectionUrl(connectionString);
+      await redisAdapter.setupConnectionWithConnectionString(connectionString);
       jest.spyOn(redisAdapter, "validateCSRF");
 
     });

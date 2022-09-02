@@ -20,11 +20,11 @@ export default interface TwoFactorProviderInterface {
   initialize: (authentication: Authentication) => void
 
   /**
-   * Register a new 2FA user and save it in the database. Returns a QR code.
+   * Generates data required for two-factor user registration.
    *
    * @param {AuthenticableUser} user
    */
-  register: (user: AuthenticableUser) => TwoFactorRegistrationData
+  generateRegistrationData: (user: AuthenticableUser) => TwoFactorRegistrationData
 
   /**
    * Generates QR code based on two-factor registration data.
