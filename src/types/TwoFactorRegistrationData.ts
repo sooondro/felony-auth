@@ -13,7 +13,7 @@ interface TwoFactorRegistrationData {
   secret: string
 
   /**
-   * Name of the provider.
+   * Name of the provider e.g. "TOTP".
    */
   provider: string
 }

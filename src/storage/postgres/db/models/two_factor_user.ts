@@ -12,11 +12,6 @@ interface TwoFactorUserAttributes {
 
 export default (sequelize: any, DataTypes: any): any => {
   class TwoFactorUser extends Model<TwoFactorUserAttributes> implements TwoFactorUser {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     declare id: string
     declare userId: string
     declare secret: string

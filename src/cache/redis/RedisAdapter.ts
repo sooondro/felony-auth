@@ -73,7 +73,6 @@ export class RedisAdapter implements CacheAdapterInterface {
   async getSession (id: string): Promise<Session> {
     const session = await this.client.get(id)
     if (session === null) {
-      // Session not found
       throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
     }
 
@@ -100,7 +99,6 @@ export class RedisAdapter implements CacheAdapterInterface {
   async validateCSRF (sessionId: string, token: string): Promise<void> {
     const session = await this.getSession(sessionId)
     if (session.csrf !== token) {
-      // 'Invalid CSRF token'
       throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
     }
   }

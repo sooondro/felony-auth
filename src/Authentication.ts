@@ -115,6 +115,7 @@ export class Authentication {
    *
    * @param {string} provider
    * @return {TwoFactorProviderInterface}
+   * @throws
    */
   getTwoFactorProvider (provider: string): TwoFactorProviderInterface {
     const result = this.twoFactorProviders.get(provider)
@@ -131,7 +132,8 @@ export class Authentication {
    * Register user.
    *
    * @param {RegistrationData} payload
-   * @return {{AuthenticableUser, AuthenticableTwoFactorUser}}
+   * @return {Promise<{ user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string }>}
+   * @throws
    */
   async register (payload: RegistrationData): Promise<{ user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string }> {
     try {
@@ -156,7 +158,8 @@ export class Authentication {
    * Login user.
    *
    * @param {LoginData} payload
-   * @return {string}
+   * @return {Promise<string>}
+   * @throws
    */
   async login (payload: LoginData): Promise<string> {
     try {
@@ -187,9 +190,11 @@ export class Authentication {
   }
 
   /**
+   * Registers a new two-factor user to the database.
    *
    * @param {AuthenticableUser} user
-   * @return {{ twoFactorUser: AuthenticableTwoFactorUser; qrCode: string; }}
+   * @return {Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }>}
+   * @throws
    */
   async registerTwoFactorUser (user: AuthenticableUser, provider: string): Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }> {
     try {
@@ -211,7 +216,8 @@ export class Authentication {
    * Setup 2fa for user by session ID.
    *
    * @param {string} sessionId
-   * @returns {string}
+   * @returns {Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }>}
+   * @throws
    */
   async registerTwoFactorUserBySessionId (sessionId: string, provider: string): Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }> {
     try {
@@ -226,7 +232,10 @@ export class Authentication {
   /**
    * Verifies the two-factor user.
    *
-   * @param {AuthenticableTwoFactorUser} user
+   * @param {AuthenticableTwoFactorUser} twoFactorUser
+   * @param {string} code
+   * @param {string} provider
+   * @throws
    */
   async verifyTwoFactorUser (twoFactorUser: AuthenticableTwoFactorUser, code: string, provider: string): Promise<void> {
     try {
@@ -242,6 +251,7 @@ export class Authentication {
    *
    * @param {AuthenticableUser} user
    * @param {string} code
+   * @throws
    */
   async verifyTwoFactorUserByAuthenticableUser (user: AuthenticableUser, code: string, provider: string): Promise<void> {
     try {
@@ -258,6 +268,7 @@ export class Authentication {
    *
    * @param {string} sessionId
    * @param {string} token
+   * @throws
    */
   async validateCSRFToken (sessionId: string, token: string): Promise<void> {
     try {
@@ -280,7 +291,8 @@ export class Authentication {
    * Retreive user session.
    *
    * @param sessionId
-   * @return
+   * @returns {Promise<Session>}
+   * @throws
    */
   async getSession (sessionId: string): Promise<Session> {
     try {
@@ -294,6 +306,8 @@ export class Authentication {
    * Create user session.
    *
    * @param {AuthenticableUser} payload
+   * @returns {Promise<string>}
+   * @throws
    */
   async createSession (payload: AuthenticableUser): Promise<string> {
     try {
@@ -309,6 +323,7 @@ export class Authentication {
    * @param {string} email
    * @param {string} oldPassword
    * @param {string} newPassword
+   * @throws
    */
   async changePassword (email: string, oldPassword: string, newPassword: string): Promise<void> {
     try {
@@ -323,6 +338,7 @@ export class Authentication {
    *
    * @param {AuthenticableUser} user
    * @return {Promise<AuthenticableTwoFactorUser>}
+   * @throws
    */
   async getTwoFactorUser (user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
     try {
@@ -336,6 +352,8 @@ export class Authentication {
    * Fetch all the providers enabled for the given email.
    *
    * @param {string} email
+   * @returns {Promise<string[]>}
+   * @throws
    */
   async getUsersTwoFactorProviders (email: string): Promise<string[]> {
     try {

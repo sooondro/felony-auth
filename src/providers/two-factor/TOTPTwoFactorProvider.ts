@@ -63,7 +63,6 @@ export class TOTPTwoFactorProvider implements TwoFactorProviderInterface {
    */
   verify (user: AuthenticableTwoFactorUser, token: string): void {
     if (!authenticator.check(token, user.secret)) {
-      // 'Verification failed! Invalid 2FA code!'
       throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
     }
   }

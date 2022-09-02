@@ -2,6 +2,9 @@
 import User from './user'
 import TwoFactorUser from './two_factor_user'
 
+/**
+ * Models class used a container for instantiating and holding Sequelize models.
+ */
 class Models {
   public User: any
   public TwoFactorUser: any

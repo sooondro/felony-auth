@@ -75,7 +75,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    *
    * @param {RegistrationData} payload
    * @return {Promise<AuthenticableUser>}
-   * @throws
+   * @throws {ValidationErrors}
    */
   async register (payload: RegistrationData): Promise<AuthenticableUser> {
     const hashedPassword = await Bcrypt.hash(payload.password, 12)
@@ -105,7 +105,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    *
    * @param {TwoFactorRegistrationData} payload
    * @return {Promise<AuthenticableTwoFactorUser>}
-   * @throws
+   * @throws {ValidationErrors}
    */
   async registerTwoFactorUser (payload: TwoFactorRegistrationData): Promise<AuthenticableTwoFactorUser> {
     const [user, created]: [AuthenticableTwoFactorUser, boolean] = await this.models.TwoFactorUser.findOrCreate({
@@ -131,7 +131,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    *
    * @param {LoginData} payload
    * @return {Promise<AuthenticableUser>}
-   * @throws
+   * @throws {ValidationErrors}
    */
   async login (payload: LoginData): Promise<{ user: AuthenticableUser, twoFactorUsers: AuthenticableTwoFactorUser[] }> {
     const user = await this.models.User.findOne({
@@ -163,7 +163,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    *
    * @param {string} email
    * @return {Promise<AuthenticableUser>}
-   * @throws
+   * @throws {ValidationErrors}
    */
   async getUserByEmail (email: string): Promise<AuthenticableUser> {
     const user = await this.models.User.findOne({
@@ -186,7 +186,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    *
    * @param {string} id
    * @return {Promise<AuthenticableUser>}
-   * @throws Login Error
+   * @throws {ValidationErrors}
    */
   async getUserById (id: string): Promise<AuthenticableUser> {
     const user = await this.models.User.findByPk(id)
@@ -207,6 +207,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    *
    * @param {string} username
    * @return {Promise<AuthenticableUser>}
+   * @throws {ValidationErrors}
    */
   async getUserByUsername (username: string): Promise<AuthenticableUser> {
     const user = await this.models.User.findOne({
@@ -229,6 +230,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    *
    * @param {AuthenticableUser} user
    * @return {AuthenticableTwoFactorUser}
+   * @throws {ValidationErrors}
    */
   async getTwoFactorUser (user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
     const twoFactorUser: AuthenticableTwoFactorUser = await this.models.TwoFactorUser.findOne({
@@ -244,6 +246,13 @@ export class PostgresAdapter implements StorageAdapterInterface {
     return twoFactorUser
   }
 
+  /**
+   * Used for fetching array of names of all the enabled two-factor providers for the given email.
+   *
+   * @param {string} email
+   * @returns {string[]}
+   * @throws {ValidationErrors}
+   */
   async getUsersTwoFactorProvidersByEmail (email: string): Promise<string[]> {
     const user = await this.models.User.findOne({
       where: { email },
@@ -267,28 +276,6 @@ export class PostgresAdapter implements StorageAdapterInterface {
     return result
   }
 
-  // /**
-  //  * Fetch two-factor user from the database by email.
-  //  *
-  //  * @param {string} email
-  //  * @return {Promise<AuthenticableTwoFactorUser>}
-  //  */
-  // async getTwoFactorUserByEmail(email: string): Promise<AuthenticableTwoFactorUser> {
-  //   const user = await this.models.TwoFactorUser.findOne({
-  //     where: { email: email }
-  //   });
-
-  //   if (!user) {
-  //     const validationErrors = new ValidationErrors();
-  //     validationErrors.addError("email", "invalid credentials");
-  //     throw validationErrors;
-  //   }
-
-  //   const authUser: AuthenticableTwoFactorUser = user;
-
-  //   return authUser;
-  // }
-
   /**
    * Change user's password.
    *
@@ -296,6 +283,7 @@ export class PostgresAdapter implements StorageAdapterInterface {
    * @param {string} oldPassword
    * @param {string} newPassword
    * @return {Promise<void>}
+   * @throws {ValidationErrors | AuthenticationError}
    */
   async changePassword (email: string, oldPassword: string, newPassword: string): Promise<void> {
     const user = await this.models.User.findOne({
