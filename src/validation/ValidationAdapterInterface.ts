@@ -1,14 +1,14 @@
-// import ErrorAdapterInterface from "../error/ErrorAdapterInterface";
+import { Authentication } from '../Authentication'
+
 import RegistrationData from '../types/RegistrationData'
 import LoginData from '../types/LoginData'
-import Authentication from '../Authentication'
 
 /**
  * Validation adapter interface.
  *
  * @type {Interface}
  */
-export default interface ValidationAdapterInterface {
+export interface ValidationAdapterInterface {
   /**
    * Used for injecting Authentication class into the adapter.
    *

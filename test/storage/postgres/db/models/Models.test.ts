@@ -1,6 +1,7 @@
-import PostgresAdapter from "../../../../../src/storage/postgres/PostgresAdapter";
-import Models from "../../../../../src/storage/postgres/db/models/Models";
 import { DataTypes } from "sequelize";
+
+import { PostgresAdapter } from "../../../../../src/storage/postgres/PostgresAdapter";
+import Models from "../../../../../src/storage/postgres/db/models/Models";
 
 describe("Models", () => {
   it("should instantiate User and TwoFactorUser properties when valid data is provided", () => {

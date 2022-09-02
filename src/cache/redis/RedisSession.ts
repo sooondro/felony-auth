@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid'
 
-import SessionInterface from '../SessionInterface'
+import { SessionInterface } from '../SessionInterface'
 import AuthenticableUser from '../../types/AuthenticableUser'
 
 /**
@@ -8,7 +8,7 @@ import AuthenticableUser from '../../types/AuthenticableUser'
  *
  * @type {Class}
  */
-export default class RedisSession implements SessionInterface {
+export class RedisSession implements SessionInterface {
   constructor (user: AuthenticableUser) {
     this.id = uuidv4()
     this.csrf = uuidv4()

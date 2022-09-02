@@ -1,4 +1,4 @@
-import AuthenticationError from "../../src/error/AuthenticationError";
+import { AuthenticationError } from "../../src/error/AuthenticationError";
 
 describe("AuthenticationError", () => {
   it("should set the name and status code when only message is provided", () => {

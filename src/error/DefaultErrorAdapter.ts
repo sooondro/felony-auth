@@ -1,15 +1,16 @@
-import Authentication from '../Authentication'
-import ErrorAdapterInterface from './ErrorAdapterInterface'
-import ErrorData from '../types/ErrorData'
-import AuthenticationError from './AuthenticationError'
+import { Authentication } from '../Authentication'
+import { ErrorAdapterInterface } from './ErrorAdapterInterface'
+import { AuthenticationError } from './AuthenticationError'
 import { ValidationErrors } from './ValidationError'
+
+import ErrorData from '../types/ErrorData'
 
 /**
  * Default error adapter.
  *
  * @type {Class}
  */
-export default class DefaultErrorAdapter implements ErrorAdapterInterface {
+export class DefaultErrorAdapter implements ErrorAdapterInterface {
   private authentication!: Authentication
 
   /**

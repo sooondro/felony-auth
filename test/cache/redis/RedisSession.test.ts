@@ -1,4 +1,5 @@
-import RedisSession from "../../../src/cache/redis/RedisSession";
+import { RedisSession } from "../../../src/cache/redis/RedisSession";
+
 import AuthenticableUser from "../../../src/types/AuthenticableUser";
 
 describe("RedisSession", () => {

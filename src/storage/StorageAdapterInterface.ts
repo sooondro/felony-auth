@@ -1,4 +1,5 @@
-import Authentication from '../Authentication'
+import { Authentication } from '../Authentication'
+
 import AuthenticableTwoFactorUser from '../types/AuthenticableTwoFactorUser'
 import AuthenticableUser from '../types/AuthenticableUser'
 import LoginData from '../types/LoginData'
@@ -10,7 +11,7 @@ import TwoFactorRegistrationData from '../types/TwoFactorRegistrationData'
  *
  * @type {Interface}
  */
-export default interface StorageAdapterInterface {
+export interface StorageAdapterInterface {
   /**
    * Used for injecting Authentication class into the adapter.
    *

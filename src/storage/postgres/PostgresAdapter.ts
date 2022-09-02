@@ -1,23 +1,23 @@
 import { Sequelize, DataTypes } from 'sequelize'
 import Bcrypt from 'bcrypt'
 
-import Authentication from '../../Authentication'
+import { Authentication } from '../../Authentication'
+import { StorageAdapterInterface } from '../StorageAdapterInterface'
 import Models from './db/models/Models'
 import { ValidationErrors } from '../../error/ValidationError'
+import { AuthenticationError } from '../../error/AuthenticationError'
 
-import StorageAdapterInterface from '../StorageAdapterInterface'
 import RegistrationData from '../../types/RegistrationData'
 import LoginData from '../../types/LoginData'
 import PostgresConnectionData from '../../types/PostgresConnectionData'
 import TwoFactorRegistrationData from '../../types/TwoFactorRegistrationData'
 import AuthenticableUser from '../../types/AuthenticableUser'
 import AuthenticableTwoFactorUser from '../../types/AuthenticableTwoFactorUser'
-import AuthenticationError from '../../error/AuthenticationError'
 
 /**
  * Storage adapter for the Postgres database.
  */
-export default class PostgresAdapter implements StorageAdapterInterface {
+export class PostgresAdapter implements StorageAdapterInterface {
   private client!: Sequelize
   private authentication!: Authentication
   public models!: Models
@@ -146,8 +146,6 @@ export default class PostgresAdapter implements StorageAdapterInterface {
       validationErrors.addError('email', 'invalid credentials')
       throw validationErrors
     }
-
-    console.log('TWOFACTORPROVIDERS', user.TwoFactorUsers)
 
     const result = await Bcrypt.compare(payload.password, user.password)
 

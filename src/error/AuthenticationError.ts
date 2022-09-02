@@ -1,7 +1,7 @@
 /**
  * Authentication error class. All the errors except the ValidationErrors get converted to this class.
  */
-export default class AuthenticationError extends Error {
+export class AuthenticationError extends Error {
   public statusCode: number
   public raw?: Error
 

@@ -1,10 +1,10 @@
 import { createClient } from 'redis'
 import { RedisClientType } from '@redis/client'
 
-import Authentication from '../../Authentication'
-import CacheAdapterInterface from '../CacheAdapterInterface'
-import RedisSession from './RedisSession'
-import AuthenticationError from '../../error/AuthenticationError'
+import { Authentication } from '../../Authentication'
+import { CacheAdapterInterface } from '../CacheAdapterInterface'
+import { RedisSession } from './RedisSession'
+import { AuthenticationError } from '../../error/AuthenticationError'
 import AuthenticableUser from '../../types/AuthenticableUser'
 import Session from '../../types/Session'
 import RedisConnectionData from '../../types/RedisConnectionData'
@@ -12,7 +12,7 @@ import RedisConnectionData from '../../types/RedisConnectionData'
 /**
  * Redis adapter.
  */
-export default class RedisAdapter implements CacheAdapterInterface {
+export class RedisAdapter implements CacheAdapterInterface {
   private client!: RedisClientType
   private authentication!: Authentication
 

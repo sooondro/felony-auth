@@ -1,17 +1,18 @@
-import StorageAdapterInterface from './storage/StorageAdapterInterface'
-import CacheAdapterInterface from './cache/CacheAdapterInterface'
-import ErrorAdapterInterface from './error/ErrorAdapterInterface'
-import ValidationAdapterInterface from './validation/ValidationAdapterInterface'
-import TwoFactorProviderInterface from './providers/two-factor/TwoFactorProviderInterface'
+import { StorageAdapterInterface } from './storage/StorageAdapterInterface'
+import { CacheAdapterInterface } from './cache/CacheAdapterInterface'
+import { ErrorAdapterInterface } from './error/ErrorAdapterInterface'
+import { ValidationAdapterInterface } from './validation/ValidationAdapterInterface'
+import { TwoFactorProviderInterface } from './providers/two-factor/TwoFactorProviderInterface'
 
-import RegistrationData from './types/RegistrationData'
+import { AuthenticationError } from './error/AuthenticationError'
+
 import LoginData from './types/LoginData'
 import Session from './types/Session'
+import RegistrationData from './types/RegistrationData'
 import AuthenticableUser from './types/AuthenticableUser'
 import AuthenticableTwoFactorUser from './types/AuthenticableTwoFactorUser'
-import AuthenticationError from './error/AuthenticationError'
 
-export default class Authentication {
+export class Authentication {
   private errorAdapter!: ErrorAdapterInterface
   private validationAdapter!: ValidationAdapterInterface
   private storageAdapter!: StorageAdapterInterface
@@ -119,7 +120,8 @@ export default class Authentication {
     const result = this.twoFactorProviders.get(provider)
 
     if (result === undefined) {
-      throw new Error('provider not found')
+      throw new AuthenticationError('provider not found', { name: 'AuthenticationError', statusCode: 500 })
+      // PITANJE da napravim try catch i throwam kako bi handleError() metoda rijesila error
     }
 
     return result

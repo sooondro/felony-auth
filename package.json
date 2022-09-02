@@ -2,7 +2,8 @@
   "name": "felony-auth",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index",
+  "types": "lib/index",
   "scripts": {
     "make-user-model": "NODE_ENV=test npx sequelize-cli model:generate --name user --attributes username:string,first_name:string,last_name:string,email:string,password:string",
     "make-two-factor-user-model": "NODE_ENV=test npx sequelize-cli model:generate --name two_factor_user --attributes secret:string,provider:string",

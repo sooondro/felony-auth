@@ -1,12 +1,14 @@
 import { UniqueConstraintError, ValidationError } from 'sequelize'
-import PostgresAdapter from '../../../src/storage/postgres/PostgresAdapter'
+
+import { AuthenticationError } from '../../../src/error/AuthenticationError'
+import { PostgresAdapter } from '../../../src/storage/postgres/PostgresAdapter'
 import { ValidationErrors } from '../../../src/error/ValidationError'
+
 import LoginData from '../../../src/types/LoginData'
 import TwoFactorRegistrationData from '../../../src/types/TwoFactorRegistrationData'
 import RegistrationData from '../../../src/types/RegistrationData'
 import AuthenticableUser from '../../../src/types/AuthenticableUser'
 import PostgresConnectionData from '../../../src/types/PostgresConnectionData'
-import AuthenticationError from '../../../src/error/AuthenticationError'
 
 describe('PostgresAdapter', () => {
   let postgresAdapter: PostgresAdapter
@@ -283,7 +285,7 @@ describe('PostgresAdapter', () => {
       jest.spyOn(postgresAdapter, 'register')
 
       await postgresAdapter.register(registrationData)
-      const { user, twoFactorUser } = await postgresAdapter.login(loginData)
+      const { user, twoFactorUsers } = await postgresAdapter.login(loginData)
 
       expect(postgresAdapter.register).toHaveBeenCalledTimes(1)
       expect(postgresAdapter.login).toHaveBeenCalledTimes(1)
@@ -314,7 +316,7 @@ describe('PostgresAdapter', () => {
 
       await postgresAdapter.register(registrationData)
 
-      const { user, twoFactorUser } = await postgresAdapter.login(loginData)
+      const { user, twoFactorUsers } = await postgresAdapter.login(loginData)
 
       expect(postgresAdapter.register).toHaveBeenCalledTimes(1)
       expect(postgresAdapter.login).toHaveBeenCalledTimes(1)
@@ -799,13 +801,13 @@ describe('PostgresAdapter', () => {
 
       const user = await postgresAdapter.register(payload)
 
-      
+
       const twoFactorPayload: TwoFactorRegistrationData = {
         userId: user.id,
         secret: 'foobarbaz',
         provider: 'TOTP'
       }
-      
+
       const twoFactorUser = await postgresAdapter.registerTwoFactorUser(twoFactorPayload)
       const providers = await postgresAdapter.getUsersTwoFactorProvidersByEmail("foo@bar.com")
 

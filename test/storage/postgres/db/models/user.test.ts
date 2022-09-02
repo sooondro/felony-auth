@@ -1,6 +1,7 @@
-import { ValidationError } from "sequelize";
-import PostgresAdapter from "../../../../../src/storage/postgres/PostgresAdapter";
 import mockdate from 'mockdate';
+
+import { PostgresAdapter } from "../../../../../src/storage/postgres/PostgresAdapter";
+import { ValidationError } from "sequelize";
 
 describe("user", () => {
   const postgresAdapter = new PostgresAdapter();
@@ -21,7 +22,7 @@ describe("user", () => {
         id: "foo"
       });
     } catch (error) {
-      if(error instanceof ValidationError) {
+      if (error instanceof ValidationError) {
         expect(error.errors).toMatchSnapshot();
       }
 
@@ -42,10 +43,10 @@ describe("user", () => {
         password: "",
       });
     } catch (error) {
-      if(error instanceof ValidationError) {
+      if (error instanceof ValidationError) {
         expect(error.errors).toMatchSnapshot();
       }
-    
+
       mockdate.reset();
     }
   });

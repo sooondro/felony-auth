@@ -1,6 +1,7 @@
-import AuthenticationError from "../../src/error/AuthenticationError";
-import DefaultErrorAdapter from "../../src/error/DefaultErrorAdapter";
+import { AuthenticationError } from "../../src/error/AuthenticationError";
+import { DefaultErrorAdapter } from "../../src/error/DefaultErrorAdapter";
 import { ValidationErrors } from "../../src/error/ValidationError";
+
 import ErrorData from "../../src/types/ErrorData";
 
 /**

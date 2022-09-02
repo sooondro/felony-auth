@@ -1,5 +1,6 @@
-import RedisAdapter from "../../../src/cache/redis/RedisAdapter";
-import AuthenticationError from "../../../src/error/AuthenticationError";
+import { RedisAdapter } from "../../../src/cache/redis/RedisAdapter";
+import {AuthenticationError} from "../../../src/error/AuthenticationError";
+
 import AuthenticableUser from "../../../src/types/AuthenticableUser";
 import RedisConnectionData from "../../../src/types/RedisConnectionData";
 
@@ -94,24 +95,6 @@ describe("RedisAdapter", () => {
       await redisAdapter['client'].flushAll();
       redisAdapter["client"].quit();
     });
-
-    // it("should throw when invalid data is provided", async () => {
-    //   const user: AuthenticableUser = {
-    //     id: "",
-    //     username: "",
-    //     firstName: "",
-    //     lastName: "",
-    //     email: ""
-    //   };
-
-    //   try {
-    //     await redisAdapter.createSession(user);
-    //   } catch (error) {
-    //     console.log(error);
-    //     expect(redisAdapter.createSession).toHaveBeenCalledTimes(1);
-
-    //   }
-    // });
 
     it("should return a session id when valid data is provided", async () => {
       const user: AuthenticableUser = {

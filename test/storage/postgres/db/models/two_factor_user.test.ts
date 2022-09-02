@@ -1,6 +1,7 @@
 import { ValidationError } from "sequelize";
-import PostgresAdapter from "../../../../../src/storage/postgres/PostgresAdapter";
 import mockdate from "mockdate";
+
+import { PostgresAdapter } from "../../../../../src/storage/postgres/PostgresAdapter";
 
 describe("two_factor_user", () => {
   const postgresAdapter = new PostgresAdapter();

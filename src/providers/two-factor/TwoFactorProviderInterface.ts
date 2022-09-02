@@ -1,4 +1,5 @@
-import Authentication from '../../Authentication'
+import { Authentication } from '../../Authentication'
+
 import AuthenticableTwoFactorUser from '../../types/AuthenticableTwoFactorUser'
 import AuthenticableUser from '../../types/AuthenticableUser'
 import TwoFactorRegistrationData from '../../types/TwoFactorRegistrationData'
@@ -6,7 +7,7 @@ import TwoFactorRegistrationData from '../../types/TwoFactorRegistrationData'
 /**
  * Interface for the 2FA provider
  */
-export default interface TwoFactorProviderInterface {
+export interface TwoFactorProviderInterface {
   /**
    * Type of provider e.g. software tokens (TOTP), SMS text message, hardware tokens.
    */

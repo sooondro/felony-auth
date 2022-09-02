@@ -1,7 +1,8 @@
 import { authenticator } from "otplib";
-import AuthenticationError from "../../../src/error/AuthenticationError";
 
-import TOTPTwoFactorProvider from "../../../src/providers/two-factor/TOTPTwoFactorProvider";
+import { AuthenticationError } from "../../../src/error/AuthenticationError";
+import { TOTPTwoFactorProvider } from "../../../src/providers/two-factor/TOTPTwoFactorProvider";
+
 import AuthenticableTwoFactorUser from "../../../src/types/AuthenticableTwoFactorUser";
 import AuthenticableUser from "../../../src/types/AuthenticableUser";
 
@@ -104,7 +105,7 @@ describe("TOTPTwoFactorProvider", () => {
       };
 
       const result = await twoFactorProvider.generateQRCode(user);
-      
+
       expect(twoFactorProvider.generateQRCode).toHaveBeenCalledTimes(1);
       expect(result).toBeDefined();
       expect(result).toContain("data:image/png;base64");

@@ -1,14 +1,15 @@
 import { authenticator } from 'otplib'
 import QRCode from 'qrcode'
 
-import TwoFactorProviderInterface from './TwoFactorProviderInterface'
+import { Authentication } from '../../Authentication'
+import { TwoFactorProviderInterface } from './TwoFactorProviderInterface'
+import { AuthenticationError } from '../../error/AuthenticationError'
+
 import TwoFactorRegistrationData from '../../types/TwoFactorRegistrationData'
 import AuthenticableTwoFactorUser from '../../types/AuthenticableTwoFactorUser'
 import AuthenticableUser from '../../types/AuthenticableUser'
-import Authentication from '../../Authentication'
-import AuthenticationError from '../../error/AuthenticationError'
 
-export default class TOTPTwoFactorProvider implements TwoFactorProviderInterface {
+export class TOTPTwoFactorProvider implements TwoFactorProviderInterface {
   private authentication!: Authentication
 
   /**

@@ -1,18 +1,18 @@
 import Validator from 'validator'
 
-import ValidationAdapterInterface from './ValidationAdapterInterface'
-import Authentication from '../Authentication'
+import { ValidationAdapterInterface } from './ValidationAdapterInterface'
+import { Authentication } from '../Authentication'
+import { ValidationErrors } from '../error/ValidationError'
 
 import RegistrationData from '../types/RegistrationData'
 import LoginData from '../types/LoginData'
-import { ValidationErrors } from '../error/ValidationError'
 
 /**
  * Default validation adapter implementation.
  *
  * @type {Class}
  */
-export default class DefaultValidationAdapter implements ValidationAdapterInterface {
+export class DefaultValidationAdapter implements ValidationAdapterInterface {
   private authentication?: Authentication
 
   /**

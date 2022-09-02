@@ -3,7 +3,7 @@ import AuthenticableUser from '../types/AuthenticableUser'
 /**
  * Interface for the user session.
  */
-export default interface SessionInterface {
+export interface SessionInterface {
   /**
    * Getter for the session ID.
    */

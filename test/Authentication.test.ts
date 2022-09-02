@@ -1,13 +1,13 @@
 import { authenticator } from "otplib";
 
-import Authentication from "../src/Authentication";
+import { Authentication } from "../src/Authentication";
 import { ValidationErrors } from "../src/error/ValidationError";
-import PostgresAdapter from "../src/storage/postgres/PostgresAdapter";
-import DefaultErrorAdapter from "../src/error/DefaultErrorAdapter";
-import DefaultValidationAdapter from "../src/validation/DefaultValidationAdapter";
-import TOTPTwoFactorProvider from "../src/providers/two-factor/TOTPTwoFactorProvider";
-import RedisAdapter from "../src/cache/redis/RedisAdapter";
-import AuthenticationError from "../src/error/AuthenticationError";
+import { PostgresAdapter } from "../src/storage/postgres/PostgresAdapter";
+import { DefaultErrorAdapter } from "../src/error/DefaultErrorAdapter";
+import { DefaultValidationAdapter } from "../src/validation/DefaultValidationAdapter";
+import { TOTPTwoFactorProvider } from "../src/providers/two-factor/TOTPTwoFactorProvider";
+import { RedisAdapter } from "../src/cache/redis/RedisAdapter";
+import { AuthenticationError } from "../src/error/AuthenticationError";
 
 import AuthenticableUser from "../src/types/AuthenticableUser";
 import RegistrationData from "../src/types/RegistrationData";
@@ -18,6 +18,83 @@ describe("Authentication", () => {
   let authentication: Authentication;
   let postgresAdapter: PostgresAdapter;
   let redisAdapter: RedisAdapter;
+
+  describe('addTwoFactorProvider', () => {
+    beforeEach(async () => {
+      authentication = new Authentication();
+      postgresAdapter = new PostgresAdapter();
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      const errorAdapter = new DefaultErrorAdapter();
+      const validationAdapter = new DefaultValidationAdapter();
+      const twoFactorProvider = new TOTPTwoFactorProvider();
+      redisAdapter = new RedisAdapter();
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
+      authentication.CacheAdapter = redisAdapter;
+      authentication.StorageAdapter = postgresAdapter;
+      authentication.ErrorAdapter = errorAdapter;
+      authentication.ValidationAdapter = validationAdapter;
+
+      jest.spyOn(authentication, "addTwoFactorProvider");
+    });
+
+    afterEach(async () => {
+      jest.resetAllMocks();
+    });
+
+    it("should add a new provider to the map", () => {
+      const twoFactorProvider = new TOTPTwoFactorProvider();
+      authentication.addTwoFactorProvider(twoFactorProvider);
+
+      expect(authentication.addTwoFactorProvider).toHaveBeenCalledTimes(1);
+      expect(authentication.TwoFactorProviders.has('TOTP')).toBeTruthy();
+    })
+  })
+
+  describe('getTwoFactorProvider', () => {
+    beforeEach(async () => {
+      authentication = new Authentication();
+      postgresAdapter = new PostgresAdapter();
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      const errorAdapter = new DefaultErrorAdapter();
+      const validationAdapter = new DefaultValidationAdapter();
+      const twoFactorProvider = new TOTPTwoFactorProvider();
+      redisAdapter = new RedisAdapter();
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
+      authentication.CacheAdapter = redisAdapter;
+      authentication.StorageAdapter = postgresAdapter;
+      authentication.ErrorAdapter = errorAdapter;
+      authentication.ValidationAdapter = validationAdapter;
+
+      jest.spyOn(authentication, "getTwoFactorProvider");
+    });
+
+    afterEach(async () => {
+      jest.resetAllMocks();
+    });
+
+    it("should throw when invalid provider's name is given", () => {
+      const twoFactorProvider = new TOTPTwoFactorProvider();
+      authentication.addTwoFactorProvider(twoFactorProvider);
+
+      try {
+        const provider = authentication.getTwoFactorProvider('foo');
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthenticationError)
+        expect(authentication.getTwoFactorProvider).toHaveBeenCalledTimes(1)
+      }
+    })
+
+    it("should return a 2FA provider when valid provider's name is given", () => {
+      const twoFactorProvider = new TOTPTwoFactorProvider();
+
+      authentication.addTwoFactorProvider(twoFactorProvider);
+
+      const provider = authentication.getTwoFactorProvider('TOTP');
+
+      expect(authentication.getTwoFactorProvider).toHaveBeenCalledTimes(1)
+      expect(provider).toBeDefined();
+    })
+  })
 
   describe("register", () => {
     beforeEach(async () => {
@@ -129,7 +206,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       const result = await authentication.register(payload);
@@ -259,7 +336,7 @@ describe("Authentication", () => {
       const loginPayload: LoginData = {
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       const result = await authentication.login(loginPayload);
@@ -281,7 +358,7 @@ describe("Authentication", () => {
         twoFactorAuthenticationProvider: "TOTP",
       };
 
-      const {user} = await authentication.register(registrationPayload);
+      const { user } = await authentication.register(registrationPayload);
 
       const twoFactorUser = await authentication.getTwoFactorUser(user);
 
@@ -366,7 +443,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       const user = await authentication.register(registrationPayload);
@@ -393,7 +470,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       const user = await authentication.register(registrationPayload);
@@ -420,7 +497,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       const user = await authentication.register(registrationPayload);
@@ -489,7 +566,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       await authentication.register(registrationPayload);
@@ -522,7 +599,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       await authentication.register(registrationPayload);
@@ -602,7 +679,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       await authentication.register(registrationPayload);
@@ -683,7 +760,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       const user = await authentication.register(registrationPayload);
@@ -718,7 +795,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       const user = await authentication.register(registrationPayload);
@@ -790,7 +867,7 @@ describe("Authentication", () => {
         lastName: "Bar",
         email: "foo@bar.com",
         password: "foobar",
-        
+
       };
 
       await authentication.register(registrationPayload);
@@ -1184,7 +1261,7 @@ describe("Authentication", () => {
       jest.spyOn(authentication.StorageAdapter, "getUsersTwoFactorProvidersByEmail").mockImplementationOnce(() => {
         throw "foobar";
       });
-      
+
       try {
         await authentication.getUsersTwoFactorProviders("foo@bar.com");
       } catch (error) {
@@ -1196,7 +1273,7 @@ describe("Authentication", () => {
 
     it("should throw ValidationErrors when a nonexistent email is provided", async () => {
       try {
-        
+
       } catch (error) {
         expect(error).toBeInstanceOf(ValidationErrors);
         expect(authentication.StorageAdapter.getUsersTwoFactorProvidersByEmail).toHaveBeenCalledTimes(1);
