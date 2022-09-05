@@ -1,9 +1,17 @@
 {
   "name": "felony-auth",
   "version": "1.0.0",
-  "description": "",
+  "description": "An out-of-the-box authentication module",
   "main": "lib/index",
   "types": "lib/index",
+  "author": "Sandro Blavicki",
+  "license": "ISC",
+  "keywords": [
+    "barrage",
+    "auth",
+    "felony",
+    "module"
+  ],
   "scripts": {
     "make-user-model": "NODE_ENV=test npx sequelize-cli model:generate --name user --attributes username:string,first_name:string,last_name:string,email:string,password:string",
     "make-two-factor-user-model": "NODE_ENV=test npx sequelize-cli model:generate --name two_factor_user --attributes secret:string,provider:string",
@@ -13,8 +21,6 @@
     "jest-clear": "npx jest --clearCache",
     "test": "jest --detectOpenHandles"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.1",
     "otplib": "^12.0.1",
