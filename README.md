@@ -115,6 +115,7 @@ Authentication.StorageAdapter = postgresAdapter;
 Using the config data: 
 ```js
 const postgresAdapter = new PostgresAdapter();
+
 const config: PostgresConnectionData = {
   database: 'felony_auth_test',
   username: 'postgres',
@@ -161,7 +162,7 @@ Authentication.CacheAdapter = redisAdapter;
 Firstly, to start using the module, the environment has to be set. For the module to run correctly, if the default implementation is used, there needs to be a Postgres database and a Redis cache broker set up.
 
 ### Bootstrap default setup using Docker and Sequelize migrations
-We at Barrage visioned this to be a painless process, and to ensure that, we provided a docker-compose.yml file which will compose a docker container and run a Postgres and Redis instance in it. Before using it, please be sure to have docker installed. To run the docker-compose.yml file and setup your docker environment, write the following command in the terminal at the root of your project:
+We at Barrage visioned this to be a painless process, and to ensure that, we provided a docker-compose.yml file which will compose a Docker container and run a Postgres and Redis instance in it. Before using it, please be sure to have Docker installed. To run the docker-compose.yml file and setup your Docker environment, write the following command in the terminal at the root of your project:
 
 ```terminal
 docker compose up
@@ -206,7 +207,7 @@ module.exports = {
 }
 ```
 
-After setting up the docker container, the next step is to create the Postgres database models that are required for the module to run correctly. Long gone are the days of manually writing your models. To help you out, we created Sequelize migrations which will bootstrap your models in one commad. To run the migrations, write the following command in your terminal:
+After setting up the Docker container, the next step is to create the Postgres database models that are required for the module to run correctly. Long gone are the days of manually writing your models. To help you out, we created Sequelize migrations which will bootstrap your models in one commad. To run the migrations, write the following command in your terminal:
 ```terminal
 npm run migrate
 ```

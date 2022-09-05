@@ -1,5 +1,5 @@
 /**
- * Data required for conecting to the postgres database.
+ * Data required for conecting to the Postgres database.
  */
 interface PostgresConnectionData {
   /**

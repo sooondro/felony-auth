@@ -9,15 +9,15 @@ import AuthenticableUser from '../../types/AuthenticableUser'
  * @type {Class}
  */
 export class RedisSession implements SessionInterface {
+  private readonly id: string
+  private readonly csrf: string
+  private readonly user: AuthenticableUser
+
   constructor (user: AuthenticableUser) {
     this.id = uuidv4()
     this.csrf = uuidv4()
     this.user = user
   }
-
-  private readonly id: string
-  private readonly csrf: string
-  private readonly user: AuthenticableUser
 
   /**
    * Get session id.

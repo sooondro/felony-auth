@@ -20,7 +20,7 @@ export { ErrorAdapterInterface } from './error/ErrorAdapterInterface'
 export { ValidationError, ValidationErrors } from './error/ValidationError'
 
 /**
- * Two-factor provider's exports.
+ * Two-factor providers' exports.
  */
 export { TwoFactorProviderInterface } from './providers/two-factor/TwoFactorProviderInterface'
 export { TOTPTwoFactorProvider } from './providers/two-factor/TOTPTwoFactorProvider'
