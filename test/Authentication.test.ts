@@ -271,7 +271,7 @@ describe("Authentication", () => {
       jest.spyOn(authentication, "login");
       jest.spyOn(authentication.ValidationAdapter, "login");
       jest.spyOn(authentication.StorageAdapter, "login");
-      jest.spyOn(authentication.StorageAdapter, "getTwoFactorUser");
+      jest.spyOn(authentication, "twoFactorAuthenticationLogin");
       jest.spyOn(authentication.CacheAdapter, "createSession");
 
       await postgresAdapter.models.TwoFactorUser.destroy({ where: {} });
@@ -296,7 +296,7 @@ describe("Authentication", () => {
         expect(authentication.login).toHaveBeenCalledTimes(1);
         expect(authentication.ValidationAdapter.login).toHaveBeenCalledTimes(1);
         expect(authentication.StorageAdapter.login).toHaveBeenCalledTimes(0);
-        expect(authentication.StorageAdapter.getTwoFactorUser).toHaveBeenCalledTimes(0);
+        expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(0);
         expect(error).toBeInstanceOf(ValidationErrors);
       }
     });
@@ -317,10 +317,41 @@ describe("Authentication", () => {
         expect(authentication.login).toHaveBeenCalledTimes(1);
         expect(authentication.ValidationAdapter.login).toHaveBeenCalledTimes(1);
         expect(authentication.StorageAdapter.login).toHaveBeenCalledTimes(1);
-        expect(authentication.StorageAdapter.getTwoFactorUser).toHaveBeenCalledTimes(0);
+        expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(0);
         expect(error).toBeInstanceOf(AuthenticationError);
       }
     });
+
+    it("should handle the error correctly when authentication twoFactorAuthenticationLogin method throws", async () => {
+      const registrationPayload: RegistrationData = {
+        username: "FooBar",
+        firstName: "Foo",
+        lastName: "Bar",
+        email: "foo@bar.com",
+        password: "foobar",
+      };
+
+      const loginPayload: LoginData = {
+        email: "foo@bar.com",
+        password: "foobar",
+        
+      };
+
+      jest.spyOn(authentication, "twoFactorAuthenticationLogin").mockImplementationOnce(() => {
+        throw "foobar";
+      });
+
+      try {
+        await authentication.register(registrationPayload);
+        const result = await authentication.login(loginPayload);
+      } catch (error) {
+        expect(authentication.login).toHaveBeenCalledTimes(1);
+        expect(authentication.ValidationAdapter.login).toHaveBeenCalledTimes(1);
+        expect(authentication.StorageAdapter.login).toHaveBeenCalledTimes(1);
+        expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(0);
+        expect(error).toBeInstanceOf(AuthenticationError)
+      }
+    })
 
     it("should return a session ID when valid data is provided", async () => {
       const registrationPayload: RegistrationData = {
@@ -344,11 +375,11 @@ describe("Authentication", () => {
       expect(authentication.login).toHaveBeenCalledTimes(1);
       expect(authentication.ValidationAdapter.login).toHaveBeenCalledTimes(1);
       expect(authentication.StorageAdapter.login).toHaveBeenCalledTimes(1);
-      expect(authentication.StorageAdapter.getTwoFactorUser).toHaveBeenCalledTimes(0);
+      expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(0);
       expect(result).toBeDefined();
     });
 
-    it("should return a session ID when 2fa provider is set and valid data is provided", async () => {
+    it("should return a session ID when 2fa data is set and valid data is provided", async () => {
       const registrationPayload: RegistrationData = {
         username: "FooBar",
         firstName: "Foo",
@@ -376,10 +407,146 @@ describe("Authentication", () => {
       expect(authentication.login).toHaveBeenCalledTimes(1);
       expect(authentication.ValidationAdapter.login).toHaveBeenCalledTimes(1);
       expect(authentication.StorageAdapter.login).toHaveBeenCalledTimes(1);
-      expect(authentication.StorageAdapter.getTwoFactorUser).toHaveBeenCalledTimes(1);
+      expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(1);
       expect(result).toBeDefined();
     });
   });
+
+  describe("twoFactorAuthenticationLogin", () => {
+    beforeEach(async () => {
+      authentication = new Authentication();
+      postgresAdapter = new PostgresAdapter();
+      await postgresAdapter.setupConnectionWithConnectionString("postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test");
+      const errorAdapter = new DefaultErrorAdapter();
+      const validationAdapter = new DefaultValidationAdapter();
+      const twoFactorProvider = new TOTPTwoFactorProvider();
+      redisAdapter = new RedisAdapter();
+      await redisAdapter.setupConnectionWithConnectionString("redis://localhost:6379");
+      authentication.CacheAdapter = redisAdapter;
+      authentication.addTwoFactorProvider(twoFactorProvider);
+      authentication.StorageAdapter = postgresAdapter;
+      authentication.ErrorAdapter = errorAdapter;
+      authentication.ValidationAdapter = validationAdapter;
+
+      jest.spyOn(authentication, "twoFactorAuthenticationLogin");
+      jest.spyOn(authentication, "verifyTwoFactorUser");
+
+      await postgresAdapter.models.TwoFactorUser.destroy({ where: {} });
+      await postgresAdapter.models.User.destroy({ where: {} });
+    });
+
+    afterEach(async () => {
+      await redisAdapter['client'].flushAll();
+      redisAdapter["client"].quit();
+      jest.resetAllMocks();
+    });
+
+    it("should throw when twoFactorAuthenticationData is not provided", async () => {
+      const loginPayload: LoginData = {
+        email: "foo@bar.com",
+        password: "foobar"
+      };
+
+      const twoFactorUsers: AuthenticableTwoFactorUser[] = [];
+
+      try {
+        await authentication.twoFactorAuthenticationLogin(loginPayload, twoFactorUsers)
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthenticationError)
+        expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(1)
+        expect(authentication.verifyTwoFactorUser).toHaveBeenCalledTimes(0)
+      }
+    });
+
+    it("should throw when a nonexistent 2FA provider is provider", async () => {
+      const loginPayload: LoginData = {
+        email: "foo@bar.com",
+        password: "foobar",
+        twoFactorAuthenticationData: {
+          code: "foobar",
+          provider: "TOTP"
+        }
+      };
+
+      const twoFactorUsers: AuthenticableTwoFactorUser[] = [];
+
+      try {
+        await authentication.twoFactorAuthenticationLogin(loginPayload, twoFactorUsers)
+      } catch (error) {
+        expect(error).toBeInstanceOf(AuthenticationError)
+        expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(1)
+        expect(authentication.verifyTwoFactorUser).toHaveBeenCalledTimes(0)
+      }
+    })
+
+    it("should handle the error correctly when authentication verifyTwoFactorUser method throws", async () => {
+      const registrationPayload: RegistrationData = {
+        username: "FooBar",
+        firstName: "Foo",
+        lastName: "Bar",
+        email: "foo@bar.com",
+        password: "foobar",
+        twoFactorAuthenticationProvider: "TOTP",
+      };
+
+      const { user } = await authentication.register(registrationPayload);
+
+      const twoFactorUser = await authentication.getTwoFactorUser(user);
+
+      const loginPayload: LoginData = {
+        email: "foo@bar.com",
+        password: "foobar",
+        twoFactorAuthenticationData: {
+          provider: "TOTP",
+          code: authenticator.generate(twoFactorUser.secret)
+        }
+      };
+
+      const result = await authentication.StorageAdapter.login(loginPayload)
+      
+      jest.spyOn(authentication, "verifyTwoFactorUser").mockImplementationOnce(() => {
+        throw "foobar";
+      });
+
+      try {
+        await authentication.twoFactorAuthenticationLogin(loginPayload, result.twoFactorUsers)
+      } catch (error) {
+        expect(error).toEqual("foobar")
+        expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(1)
+        expect(authentication.verifyTwoFactorUser).toHaveBeenCalledTimes(1)
+      }
+    })
+
+    it("should do nothing when valid data is provided", async () => {
+      const registrationPayload: RegistrationData = {
+        username: "FooBar",
+        firstName: "Foo",
+        lastName: "Bar",
+        email: "foo@bar.com",
+        password: "foobar",
+        twoFactorAuthenticationProvider: "TOTP",
+      };
+
+      const { user } = await authentication.register(registrationPayload);
+
+      const twoFactorUser = await authentication.getTwoFactorUser(user);
+
+      const loginPayload: LoginData = {
+        email: "foo@bar.com",
+        password: "foobar",
+        twoFactorAuthenticationData: {
+          provider: "TOTP",
+          code: authenticator.generate(twoFactorUser.secret)
+        }
+      };
+      const result = await authentication.StorageAdapter.login(loginPayload)
+
+      await authentication.twoFactorAuthenticationLogin(loginPayload, result.twoFactorUsers)
+
+      expect(authentication.twoFactorAuthenticationLogin).toHaveBeenCalledTimes(1)
+      expect(authentication.verifyTwoFactorUser).toHaveBeenCalledTimes(1)
+    })
+  })
 
   describe("registerTwoFactorUser", () => {
     beforeEach(async () => {

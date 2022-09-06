@@ -120,7 +120,7 @@ export class Authentication {
   getTwoFactorProvider (provider: string): TwoFactorProviderInterface {
     const result = this.twoFactorProviders.get(provider)
 
-    if (result === undefined) {
+    if (result === undefined || result === null) {
       throw new AuthenticationError('provider not found', { name: 'AuthenticationError', statusCode: 500 })
       // PITANJE da napravim try catch i throwam kako bi handleError() metoda rijesila error
     }
@@ -142,7 +142,7 @@ export class Authentication {
       const user = await this.storageAdapter.register(payload)
       const result: { user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string } = { user }
 
-      if (payload.twoFactorAuthenticationProvider !== undefined) {
+      if (payload.twoFactorAuthenticationProvider !== undefined && payload.twoFactorAuthenticationProvider !== null) {
         const { twoFactorUser, qrCode } = await this.registerTwoFactorUser(user, payload.twoFactorAuthenticationProvider)
         result.twoFactorUser = twoFactorUser
         result.qrCode = qrCode
@@ -168,18 +168,7 @@ export class Authentication {
       const { user, twoFactorUsers } = await this.storageAdapter.login(payload)
 
       if (twoFactorUsers.length !== 0) {
-        if (payload.twoFactorAuthenticationData === undefined) {
-          throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
-        }
-
-        const twoFactorUser = twoFactorUsers.find(user => user.provider === payload.twoFactorAuthenticationData?.provider)
-
-        if (twoFactorUser === undefined) {
-          throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
-        }
-
-        const twoFactorProvider = this.getTwoFactorProvider(payload.twoFactorAuthenticationData.provider)
-        twoFactorProvider.verify(twoFactorUser, payload.twoFactorAuthenticationData.code)
+        await this.twoFactorAuthenticationLogin(payload, twoFactorUsers)
       }
 
       const sessionId = await this.cacheAdapter.createSession(user)
@@ -187,6 +176,26 @@ export class Authentication {
     } catch (error: any) {
       throw this.errorAdapter.handleError(error)
     }
+  }
+
+  /**
+   * Sequence for two-factor authentication login process.
+   *
+   * @param {LoginData} payload
+   * @param {AuthenticableTwoFactorUser[]} twoFactorUsers
+   */
+  async twoFactorAuthenticationLogin (payload: LoginData, twoFactorUsers: AuthenticableTwoFactorUser[]): Promise<void> {
+    if (payload.twoFactorAuthenticationData === undefined || payload.twoFactorAuthenticationData === null) {
+      throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
+    }
+
+    const twoFactorUser = twoFactorUsers.find(user => user.provider === payload.twoFactorAuthenticationData?.provider)
+
+    if (twoFactorUser === undefined) {
+      throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
+    }
+
+    await this.verifyTwoFactorUser(twoFactorUser, payload.twoFactorAuthenticationData.code, payload.twoFactorAuthenticationData.provider)
   }
 
   /**
