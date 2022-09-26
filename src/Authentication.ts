@@ -129,7 +129,6 @@ export class Authentication {
 
     if (result === undefined || result === null) {
       throw new AuthenticationError('provider not found', { name: 'AuthenticationError', statusCode: 500 })
-      // PITANJE da napravim try catch i throwam kako bi handleError() metoda rijesila error
     }
 
     return result
