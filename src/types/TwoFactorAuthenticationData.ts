@@ -1,16 +1,16 @@
 /**
  * Data required for the two-factor authentication process.
  */
-type TwoFactorAuthenticationData = {
-  /**
-   * User's email.
-   */
-  email: string,
-
+interface TwoFactorAuthenticationData {
   /**
    * CSRF token sent by the user.
    */
-  code: string,
-};
+  code: string
 
-export default TwoFactorAuthenticationData;
+  /**
+   * Name of the used provided e.g. "TOTP"
+   */
+  provider: string
+}
+
+export default TwoFactorAuthenticationData

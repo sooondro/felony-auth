@@ -1,28 +1,23 @@
-import TwoFactorAuthenticationData from "./TwoFactorAuthenticationData";
+import TwoFactorAuthenticationData from './TwoFactorAuthenticationData'
 
 /**
  * Data required for login process.
  */
-type LoginData = {
+interface LoginData {
   /**
    * User's email.
    */
-  email: string,
+  email: string
 
   /**
    * User's password.
    */
-  password: string,
-
-  /**
-   * Flag which determines whether the 2FA process is going to be executed.
-   */
-  twoFactorAuthentication: boolean,
+  password: string
 
   /**
    * Data required for the two-factor authentication.
    */
-  twoFactorAuthenticationData?: TwoFactorAuthenticationData,
-};
+  twoFactorAuthenticationData?: TwoFactorAuthenticationData
+}
 
-export default LoginData;
+export default LoginData

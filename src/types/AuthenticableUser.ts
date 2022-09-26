@@ -1,31 +1,31 @@
 /**
- * Authenticable user. 
+ * Authenticable user.
  */
-type AuthenticableUser =  {
+interface AuthenticableUser {
   /**
    * User's ID.
    */
-  id: string,
-  
+  id: string
+
   /**
    * User's username.
    */
-  username: string,
-  
+  username: string
+
   /**
    * User's first name.
    */
-  firstName: string,
+  firstName: string
 
   /**
    * User's last name.
    */
-  lastName: string,
+  lastName: string
 
   /**
    * User's email.
    */
-  email: string,
+  email: string
 }
 
-export default AuthenticableUser;
+export default AuthenticableUser

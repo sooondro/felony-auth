@@ -1,231 +1,382 @@
-import StorageAdapterInterface from "./storage/StorageAdapterInterface";
-import CacheAdapterInterface from "./cache/CacheAdapterInterface";
-import ErrorAdapterInterface from "./error/ErrorAdapterInterface";
-import ValidationAdapterInterface from "./validation/ValidationAdapterInterface";
-import TwoFactorProviderInterface from "./providers/two-factor/TwoFactorProviderInterface";
+import { StorageAdapterInterface } from './storage/StorageAdapterInterface'
+import { CacheAdapterInterface } from './cache/CacheAdapterInterface'
+import { ErrorAdapterInterface } from './error/ErrorAdapterInterface'
+import { ValidationAdapterInterface } from './validation/ValidationAdapterInterface'
+import { TwoFactorProviderInterface } from './providers/two-factor/TwoFactorProviderInterface'
 
-import RegistrationData from "./types/RegistrationData";
-import LoginData from "./types/LoginData";
-import Session from "./types/Session";
-import TwoFactorAuthenticationData from "./types/TwoFactorAuthenticationData";
-import AuthenticableUser from "./types/AuthenticableUser";
+import { AuthenticationError } from './error/AuthenticationError'
 
-// const postgresConfig: PostgresConnectionData = {
-// 	database: "felony",
-// 	username: "postgres",
-// 	password: "postgrespw",
-// 	host: "localhost",
-// 	port: 55000
-// }
+import LoginData from './types/LoginData'
+import Session from './types/Session'
+import RegistrationData from './types/RegistrationData'
+import AuthenticableUser from './types/AuthenticableUser'
+import AuthenticableTwoFactorUser from './types/AuthenticableTwoFactorUser'
 
-// const postgresConnectionUri = "postgres://postgres:postgrespw@localhost:55000/felony";
+export class Authentication {
+  private errorAdapter!: ErrorAdapterInterface
+  private validationAdapter!: ValidationAdapterInterface
+  private storageAdapter!: StorageAdapterInterface
+  private globalAuthConfig!: object
+  private cacheAdapter!: CacheAdapterInterface
+  private twoFactorProviders = new Map<string, TwoFactorProviderInterface>()
 
-export default class Authentication {
+  /**
+   * Getter for the error adapter.
+   */
+  public get ErrorAdapter (): ErrorAdapterInterface {
+    return this.errorAdapter
+  }
 
-	private _errorAdapter!: ErrorAdapterInterface;
-	private _validationAdapter!: ValidationAdapterInterface;
-	private _storageAdapter!: StorageAdapterInterface;
-	private _globalAuthConfig!: object;
-	private _cacheAdapter!: CacheAdapterInterface;
-	// private _twoFactorProviders: Map<string, TwoFactorProviderInterface>;
-	private _twoFactorProvider!: TwoFactorProviderInterface;
+  /**
+   * Setter for the error adapter.
+   */
+  public set ErrorAdapter (errorAdapter: ErrorAdapterInterface) {
+    errorAdapter.initialize(this)
+    this.errorAdapter = errorAdapter
+  }
 
-	public get errorAdapter() {
-		return this._errorAdapter;
-	}
-	public set errorAdapter(errorAdapter: ErrorAdapterInterface) {
-		this._errorAdapter = errorAdapter;
-	}
-	public get validationAdapter() {
-		return this._validationAdapter;
-	}
-	public set validationAdapter(validationAdapter: ValidationAdapterInterface) {
-		this._validationAdapter = validationAdapter;
-	}
-	public get storageAdapter() {
-		return this._storageAdapter;
-	}
-	public set storageAdapter(storageAdapter: StorageAdapterInterface) {
-		this._storageAdapter = storageAdapter;
-	}
-	public get cacheAdapter() {
-		return this._cacheAdapter;
-	}
-	public set cacheAdapter(cacheAdapter: CacheAdapterInterface) {
-		this._cacheAdapter = cacheAdapter;
-	}
-	// public set twoFactorProvider(twoFactorProvider: TwoFactorProviderInterface) {
-	// 	this._twoFactorProviders.set(twoFactorProvider.provider, twoFactorProvider);
-	// }
-	// public get twoFactorProviders() {
-	// 	return this._twoFactorProviders;
-	// }
-	// public set twoFactorProviders(twoFactorProviders: Map<string, TwoFactorProviderInterface>) {
-	// 	this._twoFactorProviders = twoFactorProviders;
-	// }
-	public set twoFactorProvider(twoFactorProvider: TwoFactorProviderInterface) {
-		this._twoFactorProvider = twoFactorProvider;
-	}
-	public get twoFactorProvider() {
-		return this._twoFactorProvider;
-	}
-	public get globalAuthConfig() {
-		return this._globalAuthConfig;
-	}
+  /**
+   * Getter for the validation adapter.
+   */
+  public get ValidationAdapter (): ValidationAdapterInterface {
+    return this.validationAdapter
+  }
 
-	/**
-	 * Register user.
-	 * 
-	 * @param {RegistrationData} payload
-	 * @return {User|{User, string}}
-	 */
-	async register(payload: RegistrationData)
-		: Promise<void | AuthenticableUser | { user: AuthenticableUser | void, twoFactorUser: string | void }> {
-		this._validationAdapter.registration(payload);
+  /**
+   * Setter for the validation adapter.
+   */
+  public set ValidationAdapter (validationAdapter: ValidationAdapterInterface) {
+    validationAdapter.initialize(this)
+    this.validationAdapter = validationAdapter
+  }
 
-		// if (payload.twoFactorAuthentication) {
-		// 	payload.twoFactorAuthenticationData.forEach(async providerData => {
-		// 		await this._twoFactorProviders.get(providerData.provider).validate(providerData);
-		// 	});
-		// }
-		const user = await this._storageAdapter.register(payload);
+  /**
+   * Getter for the storage adapter.
+   */
+  public get StorageAdapter (): StorageAdapterInterface {
+    return this.storageAdapter
+  }
 
-		// if(!payload.twoFactorAuthentication) {
-		// 	// payload.twoFactorAuthenticationData.forEach(providerData => {
-		// 	// 	if (!this._twoFactorProviders.has(providerData.provider)) {
-		// 	// 		this._errorAdapter.throwTwoFactorProviderError(new Error("Invalid 2fa provider name"));
-		// 	// 	}
+  /**
+   * Setter for the storage adapter.
+   */
+  public set StorageAdapter (storageAdapter: StorageAdapterInterface) {
+    storageAdapter.initialize(this)
+    this.storageAdapter = storageAdapter
+  }
 
-		// 	// })
-		// 	// return await this._twoFactorProvider
-		// 	console.log("UPALO JE U NE2FA");
+  /**
+   * Getter for the cache adapter.
+   */
+  public get CacheAdapter (): CacheAdapterInterface {
+    return this.cacheAdapter
+  }
 
-		// 	return user;
-		// }
-		if (payload.twoFactorAuthentication) {
-			await this._twoFactorProvider.register(payload.email);
-		}
-		return user;
-	}
+  /**
+   * Setter for the cache adapter.
+   */
+  public set CacheAdapter (cacheAdapter: CacheAdapterInterface) {
+    cacheAdapter.initialize(this)
+    this.cacheAdapter = cacheAdapter
+  }
 
-	/**
-	 * Login user.
-	 * 
-	 * @param {LoginData} payload 
-	 * @return {string}
-	 */
-	async login(payload: LoginData): Promise<string | undefined> {
-		this._validationAdapter.login(payload);
+  /**
+   * Getter for the global auth config object.
+   */
+  public get GlobalAuthConfig (): object {
+    return this.globalAuthConfig
+  }
 
-		const user = await this._storageAdapter.login(payload);
+  /**
+   * Setter for the global auth config object.
+   */
+  public set GlobalAuthConfig (globalAuthConfig: object) {
+    this.globalAuthConfig = globalAuthConfig
+  }
 
-		if (user) {
-			if (payload.twoFactorAuthentication && payload.twoFactorAuthenticationData) {
-				await this._twoFactorProvider.verify(payload.twoFactorAuthenticationData);
-			}
+  /**
+   * Getter for the two-factor providers.
+   */
+  public get TwoFactorProviders (): Map<string, TwoFactorProviderInterface> {
+    return this.twoFactorProviders
+  }
 
-			const sessionId = await this._cacheAdapter.createSession(user);
-			return sessionId;
-		}
-	}
+  /**
+   * Setter for the two-factor providers.
+   */
+  public set TwoFactorProviders (twoFactorProviders: Map<string, TwoFactorProviderInterface>) {
+    this.twoFactorProviders = twoFactorProviders
+  }
 
-	/**
-	 * Setup 2FA for user by email.
-	 * 
-	 * @param {string} email 
-	 * @returns {string}
-	 */
-	async setup2FAByEmail(email: string): Promise<string | void> {
-		return await this._twoFactorProvider.register(email);
-	}
+  /**
+   * Setter method used to add a new two-factor provider.
+   *
+   * @param {TwoFactorProviderInterface} payload
+   */
+  addTwoFactorProvider (payload: TwoFactorProviderInterface): void { // PITANJE da ostavim da prepise vrijednost ako vec postoji ili da radim provjeru
+    this.twoFactorProviders.set(payload.provider, payload)
+  }
 
-	/**
-	 * Setup 2fa for user by session ID.
-	 * 
-	 * @param {string} sessionId 
-	 * @returns {string}
-	 */
-	async setup2FABySessionId(sessionId: string): Promise<string | void> {
-		const session = await this.getSession(sessionId);
+  /**
+   * Getter method used to fetch a certain two-factor provider.
+   *
+   * @param {string} provider
+   * @return {TwoFactorProviderInterface}
+   * @throws
+   */
+  getTwoFactorProvider (provider: string): TwoFactorProviderInterface {
+    const result = this.twoFactorProviders.get(provider)
 
-		const email = session.user.email;
+    if (result === undefined || result === null) {
+      throw new AuthenticationError('provider not found', { name: 'AuthenticationError', statusCode: 500 })
+    }
 
-		if (email) {
-			return await this.setup2FAByEmail(email);
-		}
-	}
+    return result
+  }
 
-	/**
-	 * Verifies the user using the two-factor authentication.
-	 * 
-	 * @param {TwoFactorAuthenticationData} user 
-	 */
-	async verify2FAUser(user: TwoFactorAuthenticationData) {
-		await this._twoFactorProvider.verify(user);
-	}
+  /**
+   * Register user.
+   *
+   * @param {RegistrationData} payload
+   * @return {Promise<{ user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string }>}
+   * @throws
+   */
+  async register (payload: RegistrationData): Promise<{ user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string }> {
+    try {
+      this.validationAdapter.registration(payload)
 
-	/**
-	 * Validate whether the received csrf token is equal to the one stored in the user session.
-	 * 
-	 * @param {string} sessionId
-	 * @param {string} token
-	 */
-	async validateCSRFToken(sessionId: string, token: string): Promise<void> {
-		this._cacheAdapter.validateCSRF(sessionId, token);
-	}
+      const user = await this.storageAdapter.register(payload)
+      const result: { user: AuthenticableUser, twoFactorUser?: AuthenticableTwoFactorUser, qrCode?: string } = { user }
 
-	/**
-	 * Logout user.
-	 * 
-	 * @param {string} sessionId 
-	 */
-	async logout(sessionId: string): Promise<void> {
-		this._cacheAdapter.logout(sessionId);
-	}
+      if (payload.twoFactorAuthenticationProvider !== undefined && payload.twoFactorAuthenticationProvider !== null) {
+        const { twoFactorUser, qrCode } = await this.registerTwoFactorUser(user, payload.twoFactorAuthenticationProvider)
+        result.twoFactorUser = twoFactorUser
+        result.qrCode = qrCode
+      }
 
-	/**
-	 * Retreive user session.
-	 * 
-	 * @param sessionId 
-	 * @return 
-	 */
-	async getSession(sessionId: string): Promise<Session> {
-		return this._cacheAdapter.getSession(sessionId);
-	}
+      return result
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
 
-	/**
-	 * Create user session.
-	 * 
-	 * @param {AuthenticableUser} payload 
-	 */
-	async createSession(payload: AuthenticableUser): Promise<string> {
-		return await this._cacheAdapter.createSession(payload);
-	}
+  /**
+   * Login user.
+   *
+   * @param {LoginData} payload
+   * @return {Promise<string>}
+   * @throws
+   */
+  async login (payload: LoginData): Promise<string> {
+    try {
+      this.validationAdapter.login(payload)
 
-	async changePassword(email: string, oldPassword: string, newPassword: string): Promise<void> {
-		await this._storageAdapter.changePassword(email, oldPassword, newPassword);
-	}
+      const { user, twoFactorUsers } = await this.storageAdapter.login(payload)
 
-	// 2fa - salje se secret i token
+      if (twoFactorUsers.length !== 0) {
+        await this.twoFactorAuthenticationLogin(payload, twoFactorUsers)
+      }
 
-	// removeTwoFactorProvider(twoFactorProvider: string) {
-	// 	if (!this._twoFactorProviders.has(twoFactorProvider)) this._errorAdapter.throwTwoFactorProviderError(new Error("No provider found with the given name"))
-	// 	this._twoFactorProviders.delete(twoFactorProvider);
-	// }
+      const sessionId = await this.cacheAdapter.createSession(user)
+      return sessionId
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
 
-	// async getUserById(id: string): Promise<void> {
-	// 	try {
-	// 		await this.databaseProvider.getUserById(id);
-	// 	} catch (error) {
-	// 		throw error;
-	// 	}
-	// }
+  /**
+   * Sequence for two-factor authentication login process.
+   *
+   * @param {LoginData} payload
+   * @param {AuthenticableTwoFactorUser[]} twoFactorUsers
+   */
+  async twoFactorAuthenticationLogin (payload: LoginData, twoFactorUsers: AuthenticableTwoFactorUser[]): Promise<void> {
+    if (payload.twoFactorAuthenticationData === undefined || payload.twoFactorAuthenticationData === null) {
+      throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
+    }
 
-	// async getUserByEmail(email: string): Promise<void> {
-	// 	try {
-	// 		await this.databaseProvider.getUserByemail(email);
-	// 	} catch (error) {
-	// 		throw error;
-	// 	}
-	// }
+    const provider = payload.twoFactorAuthenticationData.provider
+
+    const twoFactorUser = twoFactorUsers.find(user => user.provider === provider)
+
+    if (twoFactorUser === undefined) {
+      throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
+    }
+
+    await this.verifyTwoFactorUser(twoFactorUser, payload.twoFactorAuthenticationData.code, payload.twoFactorAuthenticationData.provider)
+  }
+
+  /**
+   * Registers a new two-factor user to the database.
+   *
+   * @param {AuthenticableUser} user
+   * @return {Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }>}
+   * @throws
+   */
+  async registerTwoFactorUser (user: AuthenticableUser, provider: string): Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }> {
+    try {
+      const twoFactorProvider = this.getTwoFactorProvider(provider)
+
+      const twoFactorUserRegistrationData = twoFactorProvider.generateRegistrationData(user)
+
+      const twoFactorUser = await this.storageAdapter.registerTwoFactorUser(twoFactorUserRegistrationData)
+
+      const qrCode = await twoFactorProvider.generateQRCode(twoFactorUser)
+
+      return { twoFactorUser, qrCode }
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Setup 2fa for user by session ID.
+   *
+   * @param {string} sessionId
+   * @returns {Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }>}
+   * @throws
+   */
+  async registerTwoFactorUserBySessionId (sessionId: string, provider: string): Promise<{ twoFactorUser: AuthenticableTwoFactorUser, qrCode: string }> {
+    try {
+      const session = await this.cacheAdapter.getSession(sessionId)
+
+      return await this.registerTwoFactorUser(session.user, provider)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Verifies the two-factor user.
+   *
+   * @param {AuthenticableTwoFactorUser} twoFactorUser
+   * @param {string} code
+   * @param {string} provider
+   * @throws
+   */
+  async verifyTwoFactorUser (twoFactorUser: AuthenticableTwoFactorUser, code: string, provider: string): Promise<void> {
+    try {
+      const twoFactorProvider = this.getTwoFactorProvider(provider)
+      twoFactorProvider.verify(twoFactorUser, code)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Verifies the two-factor user using AuthenticableUser object.
+   *
+   * @param {AuthenticableUser} user
+   * @param {string} code
+   * @throws
+   */
+  async verifyTwoFactorUserByAuthenticableUser (user: AuthenticableUser, code: string, provider: string): Promise<void> {
+    try {
+      const twoFactorUser = await this.storageAdapter.getTwoFactorUser(user)
+      const twoFactorProvider = this.getTwoFactorProvider(provider)
+      twoFactorProvider.verify(twoFactorUser, code)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Validate whether the received csrf token is equal to the one stored in the user session.
+   *
+   * @param {string} sessionId
+   * @param {string} token
+   * @throws
+   */
+  async validateCSRFToken (sessionId: string, token: string): Promise<void> {
+    try {
+      this.cacheAdapter.validateCSRF(sessionId, token)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Logout user.
+   *
+   * @param {string} sessionId
+   */
+  async logout (sessionId: string): Promise<void> {
+    await this.cacheAdapter.logout(sessionId)
+  }
+
+  /**
+   * Retreive user session.
+   *
+   * @param sessionId
+   * @returns {Promise<Session>}
+   * @throws
+   */
+  async getSession (sessionId: string): Promise<Session> {
+    try {
+      return await this.cacheAdapter.getSession(sessionId)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Create user session.
+   *
+   * @param {AuthenticableUser} payload
+   * @returns {Promise<string>}
+   * @throws
+   */
+  async createSession (payload: AuthenticableUser): Promise<string> {
+    try {
+      return await this.cacheAdapter.createSession(payload)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Change user's password.
+   *
+   * @param {string} email
+   * @param {string} oldPassword
+   * @param {string} newPassword
+   * @throws
+   */
+  async changePassword (email: string, oldPassword: string, newPassword: string): Promise<void> {
+    try {
+      await this.storageAdapter.changePassword(email, oldPassword, newPassword)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Fetch an AuthenticableTwoFactorUser.
+   *
+   * @param {AuthenticableUser} user
+   * @return {Promise<AuthenticableTwoFactorUser>}
+   * @throws
+   */
+  async getTwoFactorUser (user: AuthenticableUser): Promise<AuthenticableTwoFactorUser> {
+    try {
+      return await this.storageAdapter.getTwoFactorUser(user)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
+
+  /**
+   * Fetch all the providers enabled for the given email.
+   *
+   * @param {string} email
+   * @returns {Promise<string[]>}
+   * @throws
+   */
+  async getUsersTwoFactorProviders (email: string): Promise<string[]> {
+    try {
+      return await this.storageAdapter.getUsersTwoFactorProvidersByEmail(email)
+    } catch (error: any) {
+      throw this.errorAdapter.handleError(error)
+    }
+  }
 }

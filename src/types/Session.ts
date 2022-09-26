@@ -1,23 +1,23 @@
-import AuthenticableUser from "./AuthenticableUser";
+import AuthenticableUser from './AuthenticableUser'
 
 /**
  * Session data type.
  */
-type Session = {
+interface Session {
   /**
-   * Session's ID.
+   * User's ID.
    */
-  id: string,
+  id: string
 
   /**
    * Session's CSRF token.
    */
-  csrf: string,
+  csrf: string
 
   /**
    * Session's user.
    */
   user: AuthenticableUser
-};
+}
 
-export default Session;
+export default Session

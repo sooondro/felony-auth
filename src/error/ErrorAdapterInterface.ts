@@ -1,90 +1,26 @@
+import { Authentication } from '../Authentication'
+import { AuthenticationError } from './AuthenticationError'
+import { ValidationErrors } from './ValidationError'
+
+import ErrorData from '../types/ErrorData'
+
 /**
  * Error adapter interface.
- * 
+ *
  * @type {Interface}
  */
-export default interface ErrorAdapterInterface {
+export interface ErrorAdapterInterface {
   /**
-   * Throw login validation error.
-   * 
-   * @param {Error} error
+   * Used for injecting Authentication class into the adapter.
+   *
+   * @param {Authentication} authentication
    */
-  throwLoginValidationError(error: Error): never;
+  initialize: (authentication: Authentication) => void
 
   /**
-   * Throw login error.
-   * 
-   * @param {Error} error 
+   * Error handler function.
+   *
+   * @param {string | ErrorData | Error | AuthenticationError | ValidationErrors} error
    */
-  throwLoginError(error: Error): never;
-
-  /**
-   * Throw registration validation error.
-   * 
-   * @param {Error} error 
-   */
-  throwRegistrationValidationError(error: Error): never;
-
-  /**
-   * Throw registration error.
-   * 
-   * @param {Error} error 
-   */
-  throwRegistrationError(error: Error): never;
-
-  /**
-   * Throw storage connection error.
-   * 
-   * @param {Error} error 
-   */
-  throwStorageConnectionError(error: Error): never;
-
-  /**
-   * Throw two-factor provider error.
-   * 
-   * @param {Error} error 
-   */
-  throwTwoFactorProviderError(error: Error): never;
-
-  /**
-   * Throw two-factor registration error.
-   * 
-   * @param {Error} error 
-   */
-  throwTwoFactorRegistrationError(error: Error): never;
-
-  /**
-   * Throw two-factor verification error.
-   * 
-   * @param {Error} error 
-   */
-  throwTwoFactorVerificationError(error: Error): never;
-
-  /**
-   * Throw data not found error.
-   * 
-   * @param {Error} error 
-   */
-  throwDataNotFoundError(error: Error): never;
-
-  /**
-   * Throw CSRF error.
-   * 
-   * @param {Error} error
-   */
-  throwCSRFError(error: Error): never;
-
-  /**
-   * Throw session adapter error.
-   * 
-   * @param {Error} error
-   */
-  throwSessionAdapterError(error: Error): never;
-
-  /**
-   * Throw storage adapter error.
-   * 
-   * @param {Error} error 
-   */
-  throwStorageAdapterError(error: Error): never;
+  handleError: (error: string | ErrorData | Error | AuthenticationError | ValidationErrors) => AuthenticationError | ValidationErrors
 }

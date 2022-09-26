@@ -1,48 +1,48 @@
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid'
 
-import SessionInterface from '../../models/SessionInterface';
-import AuthenticableUser from '../../types/AuthenticableUser';
+import { SessionInterface } from '../SessionInterface'
+import AuthenticableUser from '../../types/AuthenticableUser'
 
 /**
  * Redis session.
- * 
+ *
  * @type {Class}
  */
-export default class RedisSession implements SessionInterface {
-  constructor(user: AuthenticableUser) {
-    this._id = uuidv4();
-    this._csrf = uuidv4();
-    this._user = user;
-  }
+export class RedisSession implements SessionInterface {
+  private readonly id: string
+  private readonly csrf: string
+  private readonly user: AuthenticableUser
 
-  private _id: string;
-  private _csrf: string;
-  private _user: AuthenticableUser;
+  constructor (user: AuthenticableUser) {
+    this.id = uuidv4()
+    this.csrf = uuidv4()
+    this.user = user
+  }
 
   /**
    * Get session id.
-   * 
+   *
    * @return {string}
    */
-  public get id() {
-    return this._id;
+  public get Id (): string {
+    return this.id
   }
 
   /**
    * Get session csrf token.
-   * 
+   *
    * @return {string}
    */
-  get csrf(): string {
-    return this._csrf;
+  public get Csrf (): string {
+    return this.csrf
   }
 
   /**
    * Get session value.
-   * 
+   *
    * @return {AuthenticableUser}
    */
-  public get user(): AuthenticableUser {
-    return this._user;
+  public get User (): AuthenticableUser {
+    return this.user
   }
 }

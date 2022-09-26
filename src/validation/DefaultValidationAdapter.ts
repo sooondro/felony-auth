@@ -1,49 +1,68 @@
-import ErrorAdapterInterface from "../error/ErrorAdapterInterface";
-import ValidationAdapterInterface from "./ValidationAdapterInterface";
+import Validator from 'validator'
 
-import RegistrationData from "../types/RegistrationData";
-import LoginData from "../types/LoginData";
+import { ValidationAdapterInterface } from './ValidationAdapterInterface'
+import { Authentication } from '../Authentication'
+import { ValidationErrors } from '../error/ValidationError'
 
-import Validator from 'validator';
+import RegistrationData from '../types/RegistrationData'
+import LoginData from '../types/LoginData'
 
 /**
  * Default validation adapter implementation.
- * 
+ *
  * @type {Class}
  */
-export default class DefaultValidationAdapter implements ValidationAdapterInterface {
+export class DefaultValidationAdapter implements ValidationAdapterInterface {
+  private authentication?: Authentication
 
-  constructor(private errorAdapter: ErrorAdapterInterface){}
+  /**
+   * Used for injecting Authentication class into the adapter
+   *
+   * @param {Authentication} authentication
+   */
+  initialize (authentication: Authentication): void {
+    this.authentication = authentication
+  }
 
   /**
    * Validate registration data.
-   * 
-   * @param {RegistrationData} payload 
-   * @throws 
+   *
+   * @param {RegistrationData} payload
+   * @throws
    */
-  registration(payload: RegistrationData): void {
-    if(!Validator.isEmail(payload.email)) {
-      this.errorAdapter.throwRegistrationValidationError(new Error("Invalid email"));
+  registration (payload: RegistrationData): void {
+    const validationErrors = new ValidationErrors()
+    if (!Validator.isEmail(payload.email)) {
+      validationErrors.addError('email', 'email')
     }
 
-    if(!Validator.isLength(payload.password, {min: 6})) {
-      this.errorAdapter.throwRegistrationValidationError(new Error("Password needs to be at least 6 characters long"));
+    if (!Validator.isLength(payload.password, { min: 6 })) {
+      validationErrors.addError('password', 'min:6')
+    }
+
+    if (validationErrors.hasErrors()) {
+      throw validationErrors
     }
   }
 
   /**
    * Validate login data.
-   * 
-   * @param payload 
+   *
+   * @param payload
    * @throws
    */
-  login(payload: LoginData): void {
+  login (payload: LoginData): void {
+    const validationErrors = new ValidationErrors()
     if (!Validator.isEmail(payload.email)) {
-      this.errorAdapter.throwLoginValidationError(new Error("Invalid email"));
+      validationErrors.addError('email', 'email')
     }
 
     if (!Validator.isLength(payload.password, { min: 6 })) {
-      this.errorAdapter.throwLoginValidationError(new Error("Password needs to be at least 6 characters long"));
+      validationErrors.addError('password', 'min:6')
+    }
+
+    if (validationErrors.hasErrors()) {
+      throw validationErrors
     }
   }
 }

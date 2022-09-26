@@ -1,26 +1,26 @@
 /**
  * Authenticable two-factor user.
  */
-type AuthenticableTwoFactorUser = {
+interface AuthenticableTwoFactorUser {
   /**
    * Two-factor user's ID.
    */
-  id: string,
+  id: string
 
   /**
-   * Two-facotr user's email.
+   * User's id.
    */
-  email: string,
+  userId: string
 
   /**
    * Two-factor provider.
    */
-  provider: string,
+  provider: string
 
   /**
    * Two-factor user's secret.
    */
-  secret: string,
+  secret: string
 }
 
-export default AuthenticableTwoFactorUser;
+export default AuthenticableTwoFactorUser

@@ -1,36 +1,36 @@
 /**
  * Data required for the registration process.
  */
-type RegistrationData = {
+interface RegistrationData {
   /**
    * User's username.
    */
-  username: string,
+  username: string
 
   /**
    * User's first name.
    */
-  firstName: string,
+  firstName: string
 
   /**
    * User's last name.
    */
-  lastName: string,
+  lastName: string
 
   /**
-   * User's email. 
+   * User's email.
    */
-  email: string,
-  
+  email: string
+
   /**
    * User's password.
    */
-  password: string,
+  password: string
 
   /**
-   * Two-factor authentication flag.
+   * Two-factor authentication provider name.
    */
-  twoFactorAuthentication: boolean,
-};
+  twoFactorAuthenticationProvider?: string
+}
 
-export default RegistrationData;
+export default RegistrationData
