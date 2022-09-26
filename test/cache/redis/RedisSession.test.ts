@@ -1,6 +1,6 @@
-import { RedisSession } from "../../../src/cache/redis/RedisSession";
+import { RedisSession } from "../../../src/cache/redis/RedisSession"
 
-import AuthenticableUser from "../../../src/types/AuthenticableUser";
+import AuthenticableUser from "../../../src/types/AuthenticableUser"
 
 describe("RedisSession", () => {
   describe("constructor", () => {
@@ -11,17 +11,17 @@ describe("RedisSession", () => {
         firstName: "Foo",
         lastName: "Bar",
         email: "foo@bar.com"
-      };
+      }
 
-      const redisSession = new RedisSession(user);
+      const redisSession = new RedisSession(user)
 
-      expect(redisSession).toBeDefined();
-      expect(redisSession['id']).toBeDefined();
-      expect(redisSession['csrf']).toBeDefined();
-      expect(redisSession['user']).toBeDefined();
-      expect(redisSession['user']).toEqual(user);
-    });
-  });
+      expect(redisSession).toBeDefined()
+      expect(redisSession['id']).toBeDefined()
+      expect(redisSession['csrf']).toBeDefined()
+      expect(redisSession['user']).toBeDefined()
+      expect(redisSession['user']).toEqual(user)
+    })
+  })
 
   describe("getters", () => {
     it("should retrieve the right parameters", () => {
@@ -31,14 +31,14 @@ describe("RedisSession", () => {
         firstName: "Foo",
         lastName: "Bar",
         email: "foo@bar.com"
-      };
+      }
   
-      const redisSession = new RedisSession(user);
+      const redisSession = new RedisSession(user)
   
-      expect(redisSession).toBeDefined();
-      expect(redisSession.Csrf).toBeDefined();
-      expect(redisSession.Id).toBeDefined();
-      expect(redisSession.User).toEqual(user);
+      expect(redisSession).toBeDefined()
+      expect(redisSession.Csrf).toBeDefined()
+      expect(redisSession.Id).toBeDefined()
+      expect(redisSession.User).toEqual(user)
     })
-  });
-});
+  })
+})

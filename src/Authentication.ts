@@ -16,7 +16,7 @@ export class Authentication {
   private errorAdapter!: ErrorAdapterInterface
   private validationAdapter!: ValidationAdapterInterface
   private storageAdapter!: StorageAdapterInterface
-  private readonly globalAuthConfig!: object
+  private globalAuthConfig!: object
   private cacheAdapter!: CacheAdapterInterface
   private twoFactorProviders = new Map<string, TwoFactorProviderInterface>()
 
@@ -85,6 +85,13 @@ export class Authentication {
    */
   public get GlobalAuthConfig (): object {
     return this.globalAuthConfig
+  }
+
+  /**
+   * Setter for the global auth config object.
+   */
+  public set GlobalAuthConfig (globalAuthConfig: object) {
+    this.globalAuthConfig = globalAuthConfig
   }
 
   /**
@@ -189,7 +196,9 @@ export class Authentication {
       throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })
     }
 
-    const twoFactorUser = twoFactorUsers.find(user => user.provider === payload.twoFactorAuthenticationData?.provider)
+    const provider = payload.twoFactorAuthenticationData.provider
+
+    const twoFactorUser = twoFactorUsers.find(user => user.provider === provider)
 
     if (twoFactorUser === undefined) {
       throw new AuthenticationError('invalid credentials', { name: 'AuthenticationError', statusCode: 401 })

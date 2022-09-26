@@ -19,7 +19,7 @@
     "migrate-down": "NODE_ENV=test npx sequelize-cli db:migrate:undo",
     "migrate-down-all": "NODE_ENV=test npx sequelize-cli db:migrate:undo:all",
     "jest-clear": "npx jest --clearCache",
-    "test": "jest --detectOpenHandles"
+    "test": "jest --detectOpenHandles --coverage"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

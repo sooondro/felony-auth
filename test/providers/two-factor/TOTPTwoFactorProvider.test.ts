@@ -1,26 +1,41 @@
-import { authenticator } from "otplib";
+import { authenticator } from "otplib"
+import { Authentication } from "../../../src/Authentication"
 
-import { AuthenticationError } from "../../../src/error/AuthenticationError";
-import { TOTPTwoFactorProvider } from "../../../src/providers/two-factor/TOTPTwoFactorProvider";
+import { AuthenticationError } from "../../../src/error/AuthenticationError"
+import { TOTPTwoFactorProvider } from "../../../src/providers/two-factor/TOTPTwoFactorProvider"
 
-import AuthenticableTwoFactorUser from "../../../src/types/AuthenticableTwoFactorUser";
-import AuthenticableUser from "../../../src/types/AuthenticableUser";
+import AuthenticableTwoFactorUser from "../../../src/types/AuthenticableTwoFactorUser"
+import AuthenticableUser from "../../../src/types/AuthenticableUser"
 
 describe("TOTPTwoFactorProvider", () => {
-  let twoFactorProvider: TOTPTwoFactorProvider;
+  let twoFactorProvider: TOTPTwoFactorProvider
 
   beforeAll(() => {
-    twoFactorProvider = new TOTPTwoFactorProvider();
-  });
+    twoFactorProvider = new TOTPTwoFactorProvider()
+  })
+
+  describe("initialize", () => {
+    it("should set the authentication object", async () => {
+      let authentication = new Authentication()
+
+      jest.spyOn(twoFactorProvider, "initialize")
+
+      twoFactorProvider.initialize(authentication)
+
+      expect(twoFactorProvider["authentication"]).toBeDefined()
+      expect(twoFactorProvider["authentication"]).toBeInstanceOf(Authentication)
+      expect(twoFactorProvider.initialize).toHaveBeenCalledTimes(1)
+    })
+  })
 
   describe("generateRegistrationData", () => {
     beforeEach(() => {
-      jest.spyOn(twoFactorProvider, "generateRegistrationData");
-    });
+      jest.spyOn(twoFactorProvider, "generateRegistrationData")
+    })
 
     afterEach(() => {
-      jest.resetAllMocks();
-    });
+      jest.resetAllMocks()
+    })
 
     it("should return a TwoFactorRegistrationData object when valid data is provided", () => {
       const user: AuthenticableUser = {
@@ -29,28 +44,28 @@ describe("TOTPTwoFactorProvider", () => {
         firstName: "Foo",
         lastName: "Bar",
         email: "foo@bar.com"
-      };
+      }
 
-      const registrationData = twoFactorProvider.generateRegistrationData(user);
+      const registrationData = twoFactorProvider.generateRegistrationData(user)
 
-      expect(twoFactorProvider.generateRegistrationData).toHaveBeenCalledTimes(1);
-      expect(registrationData).toBeDefined();
-      expect(registrationData.userId).toBeDefined();
-      expect(registrationData.userId).toEqual(user.id);
-      expect(registrationData.provider).toBeDefined();
-      expect(registrationData.provider).toEqual(twoFactorProvider.provider);
-      expect(registrationData.secret).toBeDefined();
-    });
-  });
+      expect(twoFactorProvider.generateRegistrationData).toHaveBeenCalledTimes(1)
+      expect(registrationData).toBeDefined()
+      expect(registrationData.userId).toBeDefined()
+      expect(registrationData.userId).toEqual(user.id)
+      expect(registrationData.provider).toBeDefined()
+      expect(registrationData.provider).toEqual(twoFactorProvider.provider)
+      expect(registrationData.secret).toBeDefined()
+    })
+  })
 
   describe("verify", () => {
     beforeEach(() => {
-      jest.spyOn(twoFactorProvider, "verify");
-    });
+      jest.spyOn(twoFactorProvider, "verify")
+    })
 
     afterEach(() => {
-      jest.resetAllMocks();
-    });
+      jest.resetAllMocks()
+    })
 
     it("should throw when invalid data is provided", () => {
       const user: AuthenticableTwoFactorUser = {
@@ -58,18 +73,18 @@ describe("TOTPTwoFactorProvider", () => {
         userId: "1b0049e0-2155-4db4-a8f6-90006397fb1c", // randomly generate UUIDV4
         provider: "TOTP",
         secret: "KVKFKRCPNZQUYMLXOVYDSQKJKZDTSRLD"
-      };
+      }
 
       try {
-        twoFactorProvider.verify(user, "foo");
+        twoFactorProvider.verify(user, "foo")
       } catch (error) {
-        expect(twoFactorProvider.verify).toHaveBeenCalledTimes(1);
-        expect(error).toBeInstanceOf(AuthenticationError);
+        expect(twoFactorProvider.verify).toHaveBeenCalledTimes(1)
+        expect(error).toBeInstanceOf(AuthenticationError)
         if (error instanceof AuthenticationError) {
           expect(error.message).toEqual('invalid credentials')
         }
       }
-    });
+    })
 
     it("should do nothing when valid data is provided", () => {
       const user: AuthenticableTwoFactorUser = {
@@ -77,24 +92,24 @@ describe("TOTPTwoFactorProvider", () => {
         userId: "1b0049e0-2155-4db4-a8f6-90006397fb1c", // randomly generate UUIDV4
         provider: "TOTP",
         secret: "KVKFKRCPNZQUYMLXOVYDSQKJKZDTSRLD"
-      };
+      }
 
-      const token = authenticator.generate(user.secret);
+      const token = authenticator.generate(user.secret)
 
-      twoFactorProvider.verify(user, token);
+      twoFactorProvider.verify(user, token)
 
-      expect(twoFactorProvider.verify).toHaveBeenCalledTimes(1);
-    });
-  });
+      expect(twoFactorProvider.verify).toHaveBeenCalledTimes(1)
+    })
+  })
 
   describe("generateQRCode", () => {
     beforeEach(() => {
-      jest.spyOn(twoFactorProvider, "generateQRCode");
-    });
+      jest.spyOn(twoFactorProvider, "generateQRCode")
+    })
 
     afterEach(() => {
-      jest.resetAllMocks();
-    });
+      jest.resetAllMocks()
+    })
 
     it("should return a QR code string when valid data is provided", async () => {
       const user: AuthenticableTwoFactorUser = {
@@ -102,13 +117,13 @@ describe("TOTPTwoFactorProvider", () => {
         userId: "1b0049e0-2155-4db4-a8f6-90006397fb1c",
         provider: "TOTP",
         secret: "KVKFKRCPNZQUYMLXOVYDSQKJKZDTSRLD"
-      };
+      }
 
-      const result = await twoFactorProvider.generateQRCode(user);
+      const result = await twoFactorProvider.generateQRCode(user)
 
-      expect(twoFactorProvider.generateQRCode).toHaveBeenCalledTimes(1);
-      expect(result).toBeDefined();
-      expect(result).toContain("data:image/png;base64");
-    });
-  });
-});
+      expect(twoFactorProvider.generateQRCode).toHaveBeenCalledTimes(1)
+      expect(result).toBeDefined()
+      expect(result).toContain("data:image/png;base64")
+    })
+  })
+})

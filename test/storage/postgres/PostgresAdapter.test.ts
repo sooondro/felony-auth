@@ -1,4 +1,4 @@
-import { UniqueConstraintError, ValidationError } from 'sequelize'
+import { Sequelize, UniqueConstraintError, ValidationError } from 'sequelize'
 
 import { AuthenticationError } from '../../../src/error/AuthenticationError'
 import { PostgresAdapter } from '../../../src/storage/postgres/PostgresAdapter'
@@ -57,6 +57,29 @@ describe('PostgresAdapter', () => {
       expect(postgresAdapter['client']['config'].host).toEqual('127.0.0.1')
       expect(postgresAdapter['client']['config'].port).toEqual('5432')
       expect(postgresAdapter['models']).toBeDefined()
+    })
+  })
+
+  describe("Client", () => {
+    beforeEach(async () => {
+      postgresAdapter = new PostgresAdapter()
+      await postgresAdapter.setupConnectionWithConnectionString('postgres://postgres:postgrespw@127.0.0.1:5432/felony_auth_test')
+      await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
+      await postgresAdapter.models.User.destroy({ where: {} })
+      jest.spyOn(postgresAdapter, 'register')
+    })
+
+    afterEach(async () => {
+      await postgresAdapter.models.TwoFactorUser.destroy({ where: {} })
+      await postgresAdapter.models.User.destroy({ where: {} })
+      jest.resetAllMocks()
+    })
+
+    it("should return the sequelize object when connection is made", () => {
+      let result = postgresAdapter.Client
+
+      expect(result).toBeDefined()
+      expect(result).toBeInstanceOf(Sequelize)
     })
   })
 
